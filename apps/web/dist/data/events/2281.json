@@ -1,0 +1,2439 @@
+{
+  "event": {
+    "id": "2281",
+    "slug": "valorant-masters-bangkok-2025",
+    "name": "Masters Bangkok 2025",
+    "year": 2025,
+    "type": "masters",
+    "sourceUrls": {
+      "stats": "https://www.vlr.gg/event/stats/2281/valorant-masters-bangkok-2025",
+      "overview": "https://www.vlr.gg/event/2281/valorant-masters-bangkok-2025"
+    }
+  },
+  "teams": [
+    {
+      "id": "2281:KRX",
+      "tag": "KRX",
+      "name": "Drx",
+      "slug": "drx"
+    },
+    {
+      "id": "1120",
+      "tag": "EDG",
+      "name": "EDward Gaming",
+      "slug": "edward-gaming",
+      "vlrTeamId": "1120"
+    },
+    {
+      "id": "11058",
+      "tag": "G2",
+      "name": "G2 Esports",
+      "slug": "g2-esports",
+      "vlrTeamId": "11058"
+    },
+    {
+      "id": "2281:SEN",
+      "tag": "SEN",
+      "name": "Sentinels",
+      "slug": "sentinels"
+    },
+    {
+      "id": "14",
+      "tag": "T1",
+      "name": "T1",
+      "slug": "t1",
+      "vlrTeamId": "14"
+    },
+    {
+      "id": "2281:TL",
+      "tag": "TL",
+      "name": "Team Liquid",
+      "slug": "team-liquid"
+    },
+    {
+      "id": "2059",
+      "tag": "VIT",
+      "name": "Team Vitality",
+      "slug": "team-vitality",
+      "vlrTeamId": "2059"
+    },
+    {
+      "id": "2281:TE",
+      "tag": "TE",
+      "name": "Trace Esports",
+      "slug": "trace-esports"
+    }
+  ],
+  "placements": [
+    {
+      "eventId": "2281",
+      "teamTag": "KRX",
+      "tier": "groups",
+      "rank": 99,
+      "label": "groups"
+    },
+    {
+      "eventId": "2281",
+      "teamTag": "EDG",
+      "tier": "top4",
+      "rank": 3,
+      "label": "3rd"
+    },
+    {
+      "eventId": "2281",
+      "teamTag": "G2",
+      "tier": "runnerUp",
+      "rank": 2,
+      "label": "2nd"
+    },
+    {
+      "eventId": "2281",
+      "teamTag": "SEN",
+      "tier": "groups",
+      "rank": 99,
+      "label": "groups"
+    },
+    {
+      "eventId": "2281",
+      "teamTag": "T1",
+      "tier": "champion",
+      "rank": 1,
+      "label": "1st"
+    },
+    {
+      "eventId": "2281",
+      "teamTag": "TL",
+      "tier": "groups",
+      "rank": 99,
+      "label": "groups"
+    },
+    {
+      "eventId": "2281",
+      "teamTag": "VIT",
+      "tier": "top4",
+      "rank": 4,
+      "label": "4th"
+    },
+    {
+      "eventId": "2281",
+      "teamTag": "TE",
+      "tier": "groups",
+      "rank": 99,
+      "label": "groups"
+    }
+  ],
+  "players": [
+    {
+      "id": "15559",
+      "handle": "chichoo",
+      "displayName": "CHICHOO"
+    },
+    {
+      "id": "457",
+      "handle": "nats",
+      "displayName": "nAts"
+    },
+    {
+      "id": "15500",
+      "handle": "trent",
+      "displayName": "trent"
+    },
+    {
+      "id": "5022",
+      "handle": "derke",
+      "displayName": "Derke"
+    },
+    {
+      "id": "29833",
+      "handle": "izu",
+      "displayName": "iZu"
+    },
+    {
+      "id": "1916",
+      "handle": "free1ng",
+      "displayName": "free1ng"
+    },
+    {
+      "id": "11494",
+      "handle": "keiko",
+      "displayName": "keiko"
+    },
+    {
+      "id": "2168",
+      "handle": "trexx",
+      "displayName": "trexx"
+    },
+    {
+      "id": "4678",
+      "handle": "beyn",
+      "displayName": "BeYN"
+    },
+    {
+      "id": "804",
+      "handle": "buzz",
+      "displayName": "BuZz"
+    },
+    {
+      "id": "3885",
+      "handle": "valyn",
+      "displayName": "valyn"
+    },
+    {
+      "id": "7873",
+      "handle": "leaf",
+      "displayName": "leaf"
+    },
+    {
+      "id": "36245",
+      "handle": "n4rrate",
+      "displayName": "N4RRATE"
+    },
+    {
+      "id": "13039",
+      "handle": "meteor",
+      "displayName": "Meteor"
+    },
+    {
+      "id": "8447",
+      "handle": "less",
+      "displayName": "Less"
+    },
+    {
+      "id": "3993",
+      "handle": "jawgemo",
+      "displayName": "jawgemo"
+    },
+    {
+      "id": "4056",
+      "handle": "sylvan",
+      "displayName": "Sylvan"
+    },
+    {
+      "id": "3520",
+      "handle": "zmjjkk",
+      "displayName": "ZmjjKK"
+    },
+    {
+      "id": "485",
+      "handle": "stax",
+      "displayName": "stax"
+    },
+    {
+      "id": "4742",
+      "handle": "smoggy",
+      "displayName": "Smoggy"
+    },
+    {
+      "id": "35013",
+      "handle": "flashback",
+      "displayName": "Flashback"
+    },
+    {
+      "id": "14681",
+      "handle": "kamo",
+      "displayName": "kamo"
+    },
+    {
+      "id": "4581",
+      "handle": "jonahp",
+      "displayName": "JonahP"
+    },
+    {
+      "id": "11134",
+      "handle": "kicks",
+      "displayName": "Kicks"
+    },
+    {
+      "id": "3017",
+      "handle": "nobody",
+      "displayName": "nobody"
+    },
+    {
+      "id": "3880",
+      "handle": "bang",
+      "displayName": "bang"
+    },
+    {
+      "id": "37494",
+      "handle": "kai",
+      "displayName": "Kai"
+    },
+    {
+      "id": "4004",
+      "handle": "zekken",
+      "displayName": "zekken"
+    },
+    {
+      "id": "4462",
+      "handle": "mako",
+      "displayName": "MaKo"
+    },
+    {
+      "id": "28400",
+      "handle": "hyunmin",
+      "displayName": "HYUNMIN"
+    },
+    {
+      "id": "1475",
+      "handle": "kamyk",
+      "displayName": "kamyk"
+    },
+    {
+      "id": "3021",
+      "handle": "biank",
+      "displayName": "Biank"
+    },
+    {
+      "id": "13768",
+      "handle": "s1mon",
+      "displayName": "S1Mon"
+    },
+    {
+      "id": "1265",
+      "handle": "johnqt",
+      "displayName": "johnqt"
+    },
+    {
+      "id": "729",
+      "handle": "zellsis",
+      "displayName": "Zellsis"
+    },
+    {
+      "id": "312",
+      "handle": "sayf",
+      "displayName": "Sayf"
+    },
+    {
+      "id": "3045",
+      "handle": "luok1ng",
+      "displayName": "LuoK1ng"
+    },
+    {
+      "id": "309",
+      "handle": "patitek",
+      "displayName": "paTiTek"
+    },
+    {
+      "id": "4712",
+      "handle": "heybay",
+      "displayName": "heybay"
+    },
+    {
+      "id": "31207",
+      "handle": "carpe",
+      "displayName": "carpe"
+    },
+    {
+      "id": "4770",
+      "handle": "fengf",
+      "displayName": "FengF"
+    }
+  ],
+  "stats": [
+    {
+      "playerId": "15559",
+      "eventId": "2281",
+      "teamTag": "EDG",
+      "agents": [
+        "viper",
+        "vyse",
+        "omen"
+      ],
+      "rounds": 313,
+      "r20": 1.23,
+      "acs": 235.6,
+      "kd": 1.27,
+      "kast": 71,
+      "adr": 158.1,
+      "kpr": 0.87,
+      "apr": 0.28,
+      "fkpr": 0.08,
+      "fdpr": 0.07,
+      "hsPct": 28,
+      "clPct": 22,
+      "k": 271,
+      "d": 213,
+      "a": 87,
+      "fk": 24,
+      "fd": 22
+    },
+    {
+      "playerId": "457",
+      "eventId": "2281",
+      "teamTag": "TL",
+      "agents": [
+        "viper",
+        "chamber",
+        "cypher"
+      ],
+      "rounds": 155,
+      "r20": 1.21,
+      "acs": 257.6,
+      "kd": 1.32,
+      "kast": 72,
+      "adr": 155.1,
+      "kpr": 0.91,
+      "apr": 0.19,
+      "fkpr": 0.09,
+      "fdpr": 0.12,
+      "hsPct": 26,
+      "clPct": 13,
+      "k": 141,
+      "d": 107,
+      "a": 29,
+      "fk": 14,
+      "fd": 18
+    },
+    {
+      "playerId": "15500",
+      "eventId": "2281",
+      "teamTag": "G2",
+      "agents": [
+        "tejo",
+        "sova"
+      ],
+      "rounds": 360,
+      "r20": 1.21,
+      "acs": 220,
+      "kd": 1.21,
+      "kast": 75,
+      "adr": 146.9,
+      "kpr": 0.76,
+      "apr": 0.32,
+      "fkpr": 0.09,
+      "fdpr": 0.09,
+      "hsPct": 25,
+      "clPct": 29,
+      "k": 274,
+      "d": 226,
+      "a": 116,
+      "fk": 31,
+      "fd": 31
+    },
+    {
+      "playerId": "5022",
+      "eventId": "2281",
+      "teamTag": "VIT",
+      "agents": [
+        "raze",
+        "yoru",
+        "jett"
+      ],
+      "rounds": 225,
+      "r20": 1.18,
+      "acs": 257.2,
+      "kd": 1.2,
+      "kast": 70,
+      "adr": 166.8,
+      "kpr": 0.91,
+      "apr": 0.17,
+      "fkpr": 0.2,
+      "fdpr": 0.2,
+      "hsPct": 22,
+      "clPct": 31,
+      "k": 204,
+      "d": 170,
+      "a": 38,
+      "fk": 46,
+      "fd": 45
+    },
+    {
+      "playerId": "29833",
+      "eventId": "2281",
+      "teamTag": "T1",
+      "agents": [
+        "yoru",
+        "fade",
+        "cypher"
+      ],
+      "rounds": 453,
+      "r20": 1.13,
+      "acs": 207.1,
+      "kd": 1.24,
+      "kast": 75,
+      "adr": 130.6,
+      "kpr": 0.75,
+      "apr": 0.21,
+      "fkpr": 0.11,
+      "fdpr": 0.09,
+      "hsPct": 30,
+      "clPct": 31,
+      "k": 341,
+      "d": 276,
+      "a": 96,
+      "fk": 48,
+      "fd": 40
+    },
+    {
+      "playerId": "1916",
+      "eventId": "2281",
+      "teamTag": "KRX",
+      "agents": [
+        "tejo"
+      ],
+      "rounds": 149,
+      "r20": 1.1,
+      "acs": 227.3,
+      "kd": 1.16,
+      "kast": 77,
+      "adr": 146.9,
+      "kpr": 0.79,
+      "apr": 0.26,
+      "fkpr": 0.12,
+      "fdpr": 0.11,
+      "hsPct": 29,
+      "clPct": 7,
+      "k": 117,
+      "d": 101,
+      "a": 38,
+      "fk": 18,
+      "fd": 16
+    },
+    {
+      "playerId": "11494",
+      "eventId": "2281",
+      "teamTag": "TL",
+      "agents": [
+        "raze",
+        "astra",
+        "omen"
+      ],
+      "rounds": 155,
+      "r20": 1.09,
+      "acs": 198.9,
+      "kd": 1.09,
+      "kast": 77,
+      "adr": 137.7,
+      "kpr": 0.75,
+      "apr": 0.34,
+      "fkpr": 0.1,
+      "fdpr": 0.08,
+      "hsPct": 30,
+      "clPct": 10,
+      "k": 117,
+      "d": 107,
+      "a": 52,
+      "fk": 15,
+      "fd": 12
+    },
+    {
+      "playerId": "2168",
+      "eventId": "2281",
+      "teamTag": "VIT",
+      "agents": [
+        "brimstone",
+        "fade",
+        "sova"
+      ],
+      "rounds": 225,
+      "r20": 1.09,
+      "acs": 207.3,
+      "kd": 1.02,
+      "kast": 72,
+      "adr": 134.3,
+      "kpr": 0.68,
+      "apr": 0.44,
+      "fkpr": 0.05,
+      "fdpr": 0.05,
+      "hsPct": 19,
+      "clPct": 9,
+      "k": 153,
+      "d": 150,
+      "a": 98,
+      "fk": 12,
+      "fd": 11
+    },
+    {
+      "playerId": "4678",
+      "eventId": "2281",
+      "teamTag": "KRX",
+      "agents": [
+        "breach",
+        "sova",
+        "fade"
+      ],
+      "rounds": 149,
+      "r20": 1.08,
+      "acs": 182.4,
+      "kd": 1.03,
+      "kast": 78,
+      "adr": 117.3,
+      "kpr": 0.64,
+      "apr": 0.44,
+      "fkpr": 0.06,
+      "fdpr": 0.07,
+      "hsPct": 25,
+      "clPct": 21,
+      "k": 95,
+      "d": 92,
+      "a": 65,
+      "fk": 9,
+      "fd": 10
+    },
+    {
+      "playerId": "804",
+      "eventId": "2281",
+      "teamTag": "T1",
+      "agents": [
+        "raze",
+        "neon",
+        "yoru"
+      ],
+      "rounds": 453,
+      "r20": 1.08,
+      "acs": 239.5,
+      "kd": 1.12,
+      "kast": 72,
+      "adr": 150.4,
+      "kpr": 0.82,
+      "apr": 0.24,
+      "fkpr": 0.17,
+      "fdpr": 0.14,
+      "hsPct": 17,
+      "clPct": 20,
+      "k": 370,
+      "d": 331,
+      "a": 107,
+      "fk": 78,
+      "fd": 62
+    },
+    {
+      "playerId": "3885",
+      "eventId": "2281",
+      "teamTag": "G2",
+      "agents": [
+        "brimstone",
+        "omen",
+        "astra"
+      ],
+      "rounds": 360,
+      "r20": 1.08,
+      "acs": 186.8,
+      "kd": 1.06,
+      "kast": 76,
+      "adr": 122.1,
+      "kpr": 0.68,
+      "apr": 0.44,
+      "fkpr": 0.08,
+      "fdpr": 0.08,
+      "hsPct": 23,
+      "clPct": 14,
+      "k": 244,
+      "d": 231,
+      "a": 158,
+      "fk": 29,
+      "fd": 27
+    },
+    {
+      "playerId": "7873",
+      "eventId": "2281",
+      "teamTag": "G2",
+      "agents": [
+        "vyse",
+        "viper",
+        "chamber"
+      ],
+      "rounds": 360,
+      "r20": 1.06,
+      "acs": 207.3,
+      "kd": 1.09,
+      "kast": 74,
+      "adr": 137.5,
+      "kpr": 0.74,
+      "apr": 0.25,
+      "fkpr": 0.11,
+      "fdpr": 0.1,
+      "hsPct": 24,
+      "clPct": 12,
+      "k": 267,
+      "d": 244,
+      "a": 91,
+      "fk": 38,
+      "fd": 36
+    },
+    {
+      "playerId": "36245",
+      "eventId": "2281",
+      "teamTag": "SEN",
+      "agents": [
+        "fade",
+        "breach",
+        "omen"
+      ],
+      "rounds": 103,
+      "r20": 1.05,
+      "acs": 202.4,
+      "kd": 0.97,
+      "kast": 76,
+      "adr": 148.4,
+      "kpr": 0.73,
+      "apr": 0.39,
+      "fkpr": 0.13,
+      "fdpr": 0.04,
+      "hsPct": 27,
+      "clPct": 13,
+      "k": 75,
+      "d": 77,
+      "a": 40,
+      "fk": 13,
+      "fd": 4
+    },
+    {
+      "playerId": "13039",
+      "eventId": "2281",
+      "teamTag": "T1",
+      "agents": [
+        "viper",
+        "vyse",
+        "killjoy"
+      ],
+      "rounds": 453,
+      "r20": 1.04,
+      "acs": 229,
+      "kd": 1.09,
+      "kast": 71,
+      "adr": 152.8,
+      "kpr": 0.81,
+      "apr": 0.23,
+      "fkpr": 0.17,
+      "fdpr": 0.11,
+      "hsPct": 33,
+      "clPct": 16,
+      "k": 366,
+      "d": 337,
+      "a": 103,
+      "fk": 75,
+      "fd": 50
+    },
+    {
+      "playerId": "8447",
+      "eventId": "2281",
+      "teamTag": "VIT",
+      "agents": [
+        "viper",
+        "cypher",
+        "brimstone"
+      ],
+      "rounds": 225,
+      "r20": 1.03,
+      "acs": 197.1,
+      "kd": 1.03,
+      "kast": 68,
+      "adr": 128.8,
+      "kpr": 0.72,
+      "apr": 0.31,
+      "fkpr": 0.06,
+      "fdpr": 0.12,
+      "hsPct": 29,
+      "clPct": 20,
+      "k": 163,
+      "d": 159,
+      "a": 69,
+      "fk": 14,
+      "fd": 26
+    },
+    {
+      "playerId": "3993",
+      "eventId": "2281",
+      "teamTag": "G2",
+      "agents": [
+        "yoru",
+        "raze"
+      ],
+      "rounds": 360,
+      "r20": 1.03,
+      "acs": 218.5,
+      "kd": 1.06,
+      "kast": 71,
+      "adr": 142.9,
+      "kpr": 0.77,
+      "apr": 0.29,
+      "fkpr": 0.13,
+      "fdpr": 0.18,
+      "hsPct": 23,
+      "clPct": 38,
+      "k": 277,
+      "d": 262,
+      "a": 104,
+      "fk": 47,
+      "fd": 64
+    },
+    {
+      "playerId": "4056",
+      "eventId": "2281",
+      "teamTag": "T1",
+      "agents": [
+        "omen",
+        "brimstone",
+        "astra"
+      ],
+      "rounds": 408,
+      "r20": 1.02,
+      "acs": 186.1,
+      "kd": 0.97,
+      "kast": 77,
+      "adr": 114.6,
+      "kpr": 0.64,
+      "apr": 0.64,
+      "fkpr": 0.08,
+      "fdpr": 0.04,
+      "hsPct": 27,
+      "clPct": 17,
+      "k": 260,
+      "d": 267,
+      "a": 262,
+      "fk": 31,
+      "fd": 18
+    },
+    {
+      "playerId": "3520",
+      "eventId": "2281",
+      "teamTag": "EDG",
+      "agents": [
+        "jett",
+        "raze",
+        "yoru"
+      ],
+      "rounds": 313,
+      "r20": 1.01,
+      "acs": 236.2,
+      "kd": 1.04,
+      "kast": 70,
+      "adr": 151,
+      "kpr": 0.83,
+      "apr": 0.19,
+      "fkpr": 0.21,
+      "fdpr": 0.22,
+      "hsPct": 23,
+      "clPct": 4,
+      "k": 260,
+      "d": 249,
+      "a": 59,
+      "fk": 66,
+      "fd": 70
+    },
+    {
+      "playerId": "485",
+      "eventId": "2281",
+      "teamTag": "T1",
+      "agents": [
+        "fade",
+        "kayo",
+        "sova"
+      ],
+      "rounds": 453,
+      "r20": 1.01,
+      "acs": 173.6,
+      "kd": 1.01,
+      "kast": 74,
+      "adr": 120.3,
+      "kpr": 0.63,
+      "apr": 0.34,
+      "fkpr": 0.04,
+      "fdpr": 0.04,
+      "hsPct": 31,
+      "clPct": 17,
+      "k": 284,
+      "d": 282,
+      "a": 154,
+      "fk": 20,
+      "fd": 20
+    },
+    {
+      "playerId": "4742",
+      "eventId": "2281",
+      "teamTag": "EDG",
+      "agents": [
+        "omen",
+        "brimstone",
+        "astra"
+      ],
+      "rounds": 313,
+      "r20": 1.01,
+      "acs": 191.1,
+      "kd": 0.93,
+      "kast": 74,
+      "adr": 124.6,
+      "kpr": 0.65,
+      "apr": 0.49,
+      "fkpr": 0.1,
+      "fdpr": 0.06,
+      "hsPct": 30,
+      "clPct": 20,
+      "k": 203,
+      "d": 219,
+      "a": 152,
+      "fk": 30,
+      "fd": 20
+    },
+    {
+      "playerId": "35013",
+      "eventId": "2281",
+      "teamTag": "KRX",
+      "agents": [
+        "cypher",
+        "vyse"
+      ],
+      "rounds": 149,
+      "r20": 1,
+      "acs": 180.4,
+      "kd": 1,
+      "kast": 71,
+      "adr": 126.4,
+      "kpr": 0.68,
+      "apr": 0.17,
+      "fkpr": 0.09,
+      "fdpr": 0.07,
+      "hsPct": 26,
+      "clPct": 8,
+      "k": 101,
+      "d": 101,
+      "a": 26,
+      "fk": 13,
+      "fd": 11
+    },
+    {
+      "playerId": "14681",
+      "eventId": "2281",
+      "teamTag": "TL",
+      "agents": [
+        "yoru",
+        "jett",
+        "raze"
+      ],
+      "rounds": 155,
+      "r20": 0.99,
+      "acs": 215,
+      "kd": 1.02,
+      "kast": 66,
+      "adr": 144.5,
+      "kpr": 0.75,
+      "apr": 0.15,
+      "fkpr": 0.18,
+      "fdpr": 0.17,
+      "hsPct": 27,
+      "clPct": 13,
+      "k": 117,
+      "d": 115,
+      "a": 23,
+      "fk": 28,
+      "fd": 27
+    },
+    {
+      "playerId": "4581",
+      "eventId": "2281",
+      "teamTag": "G2",
+      "agents": [
+        "breach",
+        "vyse",
+        "skye"
+      ],
+      "rounds": 360,
+      "r20": 0.98,
+      "acs": 187.6,
+      "kd": 0.93,
+      "kast": 78,
+      "adr": 119.3,
+      "kpr": 0.65,
+      "apr": 0.46,
+      "fkpr": 0.08,
+      "fdpr": 0.07,
+      "hsPct": 24,
+      "clPct": 9,
+      "k": 235,
+      "d": 254,
+      "a": 164,
+      "fk": 30,
+      "fd": 26
+    },
+    {
+      "playerId": "11134",
+      "eventId": "2281",
+      "teamTag": "VIT",
+      "agents": [
+        "skye",
+        "omen",
+        "breach"
+      ],
+      "rounds": 225,
+      "r20": 0.94,
+      "acs": 174.3,
+      "kd": 0.93,
+      "kast": 73,
+      "adr": 115,
+      "kpr": 0.63,
+      "apr": 0.36,
+      "fkpr": 0.05,
+      "fdpr": 0.11,
+      "hsPct": 27,
+      "clPct": 22,
+      "k": 142,
+      "d": 153,
+      "a": 82,
+      "fk": 11,
+      "fd": 25
+    },
+    {
+      "playerId": "3017",
+      "eventId": "2281",
+      "teamTag": "EDG",
+      "agents": [
+        "tejo",
+        "fade"
+      ],
+      "rounds": 313,
+      "r20": 0.94,
+      "acs": 180.1,
+      "kd": 0.9,
+      "kast": 71,
+      "adr": 123.9,
+      "kpr": 0.62,
+      "apr": 0.23,
+      "fkpr": 0.09,
+      "fdpr": 0.09,
+      "hsPct": 30,
+      "clPct": 4,
+      "k": 195,
+      "d": 216,
+      "a": 71,
+      "fk": 27,
+      "fd": 27
+    },
+    {
+      "playerId": "3880",
+      "eventId": "2281",
+      "teamTag": "SEN",
+      "agents": [
+        "omen",
+        "astra",
+        "viper"
+      ],
+      "rounds": 103,
+      "r20": 0.93,
+      "acs": 186,
+      "kd": 0.91,
+      "kast": 68,
+      "adr": 113.8,
+      "kpr": 0.65,
+      "apr": 0.32,
+      "fkpr": 0.11,
+      "fdpr": 0.11,
+      "hsPct": 31,
+      "clPct": 25,
+      "k": 67,
+      "d": 74,
+      "a": 33,
+      "fk": 11,
+      "fd": 11
+    },
+    {
+      "playerId": "37494",
+      "eventId": "2281",
+      "teamTag": "TE",
+      "agents": [
+        "vyse",
+        "jett"
+      ],
+      "rounds": 74,
+      "r20": 0.92,
+      "acs": 200.8,
+      "kd": 0.87,
+      "kast": 62,
+      "adr": 128.6,
+      "kpr": 0.73,
+      "apr": 0.12,
+      "fkpr": 0.14,
+      "fdpr": 0.12,
+      "hsPct": 31,
+      "clPct": 8,
+      "k": 54,
+      "d": 62,
+      "a": 9,
+      "fk": 10,
+      "fd": 9
+    },
+    {
+      "playerId": "4004",
+      "eventId": "2281",
+      "teamTag": "SEN",
+      "agents": [
+        "raze",
+        "jett"
+      ],
+      "rounds": 103,
+      "r20": 0.92,
+      "acs": 196.6,
+      "kd": 0.99,
+      "kast": 69,
+      "adr": 135.1,
+      "kpr": 0.7,
+      "apr": 0.11,
+      "fkpr": 0.16,
+      "fdpr": 0.23,
+      "hsPct": 29,
+      "clPct": 14,
+      "k": 72,
+      "d": 73,
+      "a": 11,
+      "fk": 16,
+      "fd": 24
+    },
+    {
+      "playerId": "4462",
+      "eventId": "2281",
+      "teamTag": "KRX",
+      "agents": [
+        "omen",
+        "brimstone",
+        "astra"
+      ],
+      "rounds": 149,
+      "r20": 0.92,
+      "acs": 173.3,
+      "kd": 0.83,
+      "kast": 74,
+      "adr": 118.4,
+      "kpr": 0.57,
+      "apr": 0.48,
+      "fkpr": 0.05,
+      "fdpr": 0.11,
+      "hsPct": 24,
+      "clPct": 13,
+      "k": 85,
+      "d": 103,
+      "a": 72,
+      "fk": 8,
+      "fd": 16
+    },
+    {
+      "playerId": "28400",
+      "eventId": "2281",
+      "teamTag": "KRX",
+      "agents": [
+        "yoru"
+      ],
+      "rounds": 149,
+      "r20": 0.9,
+      "acs": 205.9,
+      "kd": 0.89,
+      "kast": 71,
+      "adr": 134,
+      "kpr": 0.72,
+      "apr": 0.22,
+      "fkpr": 0.17,
+      "fdpr": 0.15,
+      "hsPct": 32,
+      "clPct": 0,
+      "k": 108,
+      "d": 121,
+      "a": 33,
+      "fk": 25,
+      "fd": 23
+    },
+    {
+      "playerId": "1475",
+      "eventId": "2281",
+      "teamTag": "TL",
+      "agents": [
+        "astra",
+        "sova",
+        "tejo"
+      ],
+      "rounds": 155,
+      "r20": 0.86,
+      "acs": 180.3,
+      "kd": 0.85,
+      "kast": 74,
+      "adr": 118.3,
+      "kpr": 0.61,
+      "apr": 0.25,
+      "fkpr": 0.06,
+      "fdpr": 0.06,
+      "hsPct": 31,
+      "clPct": 10,
+      "k": 95,
+      "d": 112,
+      "a": 38,
+      "fk": 9,
+      "fd": 9
+    },
+    {
+      "playerId": "3021",
+      "eventId": "2281",
+      "teamTag": "TE",
+      "agents": [
+        "fade",
+        "sova"
+      ],
+      "rounds": 74,
+      "r20": 0.85,
+      "acs": 166.8,
+      "kd": 0.72,
+      "kast": 59,
+      "adr": 115.6,
+      "kpr": 0.55,
+      "apr": 0.24,
+      "fkpr": 0.07,
+      "fdpr": 0.08,
+      "hsPct": 19,
+      "clPct": 22,
+      "k": 41,
+      "d": 57,
+      "a": 18,
+      "fk": 5,
+      "fd": 6
+    },
+    {
+      "playerId": "13768",
+      "eventId": "2281",
+      "teamTag": "EDG",
+      "agents": [
+        "breach",
+        "kayo",
+        "fade"
+      ],
+      "rounds": 313,
+      "r20": 0.83,
+      "acs": 151.5,
+      "kd": 0.75,
+      "kast": 71,
+      "adr": 100.7,
+      "kpr": 0.54,
+      "apr": 0.42,
+      "fkpr": 0.03,
+      "fdpr": 0.06,
+      "hsPct": 30,
+      "clPct": 17,
+      "k": 169,
+      "d": 225,
+      "a": 133,
+      "fk": 9,
+      "fd": 18
+    },
+    {
+      "playerId": "1265",
+      "eventId": "2281",
+      "teamTag": "SEN",
+      "agents": [
+        "viper",
+        "tejo"
+      ],
+      "rounds": 103,
+      "r20": 0.82,
+      "acs": 159.8,
+      "kd": 0.79,
+      "kast": 75,
+      "adr": 105.3,
+      "kpr": 0.59,
+      "apr": 0.25,
+      "fkpr": 0.04,
+      "fdpr": 0.06,
+      "hsPct": 19,
+      "clPct": 0,
+      "k": 61,
+      "d": 77,
+      "a": 26,
+      "fk": 4,
+      "fd": 6
+    },
+    {
+      "playerId": "729",
+      "eventId": "2281",
+      "teamTag": "SEN",
+      "agents": [
+        "vyse",
+        "kayo",
+        "brimstone"
+      ],
+      "rounds": 103,
+      "r20": 0.77,
+      "acs": 159.8,
+      "kd": 0.63,
+      "kast": 70,
+      "adr": 109.3,
+      "kpr": 0.5,
+      "apr": 0.39,
+      "fkpr": 0.05,
+      "fdpr": 0.09,
+      "hsPct": 19,
+      "clPct": 0,
+      "k": 51,
+      "d": 81,
+      "a": 40,
+      "fk": 5,
+      "fd": 9
+    },
+    {
+      "playerId": "312",
+      "eventId": "2281",
+      "teamTag": "VIT",
+      "agents": [
+        "tejo",
+        "vyse",
+        "jett"
+      ],
+      "rounds": 225,
+      "r20": 0.75,
+      "acs": 155.9,
+      "kd": 0.74,
+      "kast": 69,
+      "adr": 100.1,
+      "kpr": 0.53,
+      "apr": 0.25,
+      "fkpr": 0.07,
+      "fdpr": 0.09,
+      "hsPct": 22,
+      "clPct": 9,
+      "k": 119,
+      "d": 160,
+      "a": 56,
+      "fk": 15,
+      "fd": 20
+    },
+    {
+      "playerId": "3045",
+      "eventId": "2281",
+      "teamTag": "TE",
+      "agents": [
+        "omen",
+        "astra"
+      ],
+      "rounds": 74,
+      "r20": 0.74,
+      "acs": 155.8,
+      "kd": 0.67,
+      "kast": 66,
+      "adr": 105.2,
+      "kpr": 0.54,
+      "apr": 0.31,
+      "fkpr": 0.05,
+      "fdpr": 0.07,
+      "hsPct": 34,
+      "clPct": 0,
+      "k": 40,
+      "d": 60,
+      "a": 23,
+      "fk": 4,
+      "fd": 5
+    },
+    {
+      "playerId": "309",
+      "eventId": "2281",
+      "teamTag": "TL",
+      "agents": [
+        "fade",
+        "vyse",
+        "breach"
+      ],
+      "rounds": 155,
+      "r20": 0.73,
+      "acs": 144,
+      "kd": 0.65,
+      "kast": 70,
+      "adr": 97.8,
+      "kpr": 0.47,
+      "apr": 0.43,
+      "fkpr": 0.06,
+      "fdpr": 0.08,
+      "hsPct": 25,
+      "clPct": 7,
+      "k": 73,
+      "d": 112,
+      "a": 67,
+      "fk": 10,
+      "fd": 13
+    },
+    {
+      "playerId": "4712",
+      "eventId": "2281",
+      "teamTag": "TE",
+      "agents": [
+        "viper",
+        "kayo",
+        "breach"
+      ],
+      "rounds": 74,
+      "r20": 0.69,
+      "acs": 134.3,
+      "kd": 0.54,
+      "kast": 59,
+      "adr": 89.7,
+      "kpr": 0.42,
+      "apr": 0.3,
+      "fkpr": 0.07,
+      "fdpr": 0.09,
+      "hsPct": 26,
+      "clPct": 0,
+      "k": 31,
+      "d": 57,
+      "a": 22,
+      "fk": 5,
+      "fd": 7
+    },
+    {
+      "playerId": "31207",
+      "eventId": "2281",
+      "teamTag": "T1",
+      "agents": [
+        "brimstone"
+      ],
+      "rounds": 45,
+      "r20": 0.63,
+      "acs": 140.5,
+      "kd": 0.57,
+      "kast": 67,
+      "adr": 92.1,
+      "kpr": 0.44,
+      "apr": 0.38,
+      "fkpr": 0.09,
+      "fdpr": 0.13,
+      "hsPct": 27,
+      "clPct": 25,
+      "k": 20,
+      "d": 35,
+      "a": 17,
+      "fk": 4,
+      "fd": 6
+    },
+    {
+      "playerId": "4770",
+      "eventId": "2281",
+      "teamTag": "TE",
+      "agents": [
+        "raze",
+        "omen",
+        "cypher"
+      ],
+      "rounds": 74,
+      "r20": 0.55,
+      "acs": 151,
+      "kd": 0.56,
+      "kast": 57,
+      "adr": 104.6,
+      "kpr": 0.47,
+      "apr": 0.16,
+      "fkpr": 0.11,
+      "fdpr": 0.2,
+      "hsPct": 21,
+      "clPct": 13,
+      "k": 35,
+      "d": 63,
+      "a": 12,
+      "fk": 8,
+      "fd": 15
+    }
+  ],
+  "cards": [
+    {
+      "cardId": "15559@2281",
+      "playerId": "15559",
+      "eventId": "2281",
+      "teamTag": "EDG",
+      "role": "controller",
+      "isFlex": true,
+      "rolesPlayed": [
+        "controller",
+        "sentinel"
+      ],
+      "overall": 89,
+      "subAttributes": {
+        "aim": 61,
+        "firepower": 58,
+        "clutch": 55,
+        "consistency": 53,
+        "support": 30
+      },
+      "breakdown": {
+        "baseIndividual": 66.2,
+        "placementBonus": 10,
+        "roleAdjust": 3
+      }
+    },
+    {
+      "cardId": "457@2281",
+      "playerId": "457",
+      "eventId": "2281",
+      "teamTag": "TL",
+      "role": "controller",
+      "isFlex": true,
+      "rolesPlayed": [
+        "controller",
+        "sentinel"
+      ],
+      "overall": 80,
+      "subAttributes": {
+        "aim": 62,
+        "firepower": 63,
+        "clutch": 33,
+        "consistency": 57,
+        "support": 15
+      },
+      "breakdown": {
+        "baseIndividual": 68,
+        "placementBonus": 0,
+        "roleAdjust": 3
+      }
+    },
+    {
+      "cardId": "15500@2281",
+      "playerId": "15500",
+      "eventId": "2281",
+      "teamTag": "G2",
+      "role": "initiator",
+      "isFlex": false,
+      "rolesPlayed": [
+        "initiator"
+      ],
+      "overall": 91,
+      "subAttributes": {
+        "aim": 51,
+        "firepower": 48,
+        "clutch": 73,
+        "consistency": 67,
+        "support": 37
+      },
+      "breakdown": {
+        "baseIndividual": 63.8,
+        "placementBonus": 15,
+        "roleAdjust": 2
+      }
+    },
+    {
+      "cardId": "5022@2281",
+      "playerId": "5022",
+      "eventId": "2281",
+      "teamTag": "VIT",
+      "role": "duelist",
+      "isFlex": false,
+      "rolesPlayed": [
+        "duelist"
+      ],
+      "overall": 85,
+      "subAttributes": {
+        "aim": 54,
+        "firepower": 78,
+        "clutch": 78,
+        "consistency": 50,
+        "support": 12
+      },
+      "breakdown": {
+        "baseIndividual": 64.3,
+        "placementBonus": 10,
+        "roleAdjust": 0
+      }
+    },
+    {
+      "cardId": "29833@2281",
+      "playerId": "29833",
+      "eventId": "2281",
+      "teamTag": "T1",
+      "role": "duelist",
+      "isFlex": true,
+      "rolesPlayed": [
+        "duelist",
+        "initiator",
+        "sentinel"
+      ],
+      "overall": 89,
+      "subAttributes": {
+        "aim": 58,
+        "firepower": 50,
+        "clutch": 78,
+        "consistency": 67,
+        "support": 18
+      },
+      "breakdown": {
+        "baseIndividual": 55.7,
+        "placementBonus": 20,
+        "roleAdjust": 0
+      }
+    },
+    {
+      "cardId": "1916@2281",
+      "playerId": "1916",
+      "eventId": "2281",
+      "teamTag": "KRX",
+      "role": "initiator",
+      "isFlex": false,
+      "rolesPlayed": [
+        "initiator"
+      ],
+      "overall": 72,
+      "subAttributes": {
+        "aim": 61,
+        "firepower": 55,
+        "clutch": 18,
+        "consistency": 73,
+        "support": 26
+      },
+      "breakdown": {
+        "baseIndividual": 57.3,
+        "placementBonus": 0,
+        "roleAdjust": 2
+      }
+    },
+    {
+      "cardId": "11494@2281",
+      "playerId": "11494",
+      "eventId": "2281",
+      "teamTag": "TL",
+      "role": "duelist",
+      "isFlex": true,
+      "rolesPlayed": [
+        "duelist",
+        "controller"
+      ],
+      "overall": 67,
+      "subAttributes": {
+        "aim": 56,
+        "firepower": 48,
+        "clutch": 25,
+        "consistency": 73,
+        "support": 40
+      },
+      "breakdown": {
+        "baseIndividual": 52,
+        "placementBonus": 0,
+        "roleAdjust": 0
+      }
+    },
+    {
+      "cardId": "2168@2281",
+      "playerId": "2168",
+      "eventId": "2281",
+      "teamTag": "VIT",
+      "role": "controller",
+      "isFlex": true,
+      "rolesPlayed": [
+        "controller",
+        "initiator"
+      ],
+      "overall": 78,
+      "subAttributes": {
+        "aim": 36,
+        "firepower": 35,
+        "clutch": 23,
+        "consistency": 57,
+        "support": 56
+      },
+      "breakdown": {
+        "baseIndividual": 49.1,
+        "placementBonus": 10,
+        "roleAdjust": 3
+      }
+    },
+    {
+      "cardId": "4678@2281",
+      "playerId": "4678",
+      "eventId": "2281",
+      "teamTag": "KRX",
+      "role": "initiator",
+      "isFlex": false,
+      "rolesPlayed": [
+        "initiator"
+      ],
+      "overall": 67,
+      "subAttributes": {
+        "aim": 42,
+        "firepower": 32,
+        "clutch": 53,
+        "consistency": 77,
+        "support": 56
+      },
+      "breakdown": {
+        "baseIndividual": 47.8,
+        "placementBonus": 0,
+        "roleAdjust": 2
+      }
+    },
+    {
+      "cardId": "804@2281",
+      "playerId": "804",
+      "eventId": "2281",
+      "teamTag": "T1",
+      "role": "duelist",
+      "isFlex": false,
+      "rolesPlayed": [
+        "duelist"
+      ],
+      "overall": 88,
+      "subAttributes": {
+        "aim": 40,
+        "firepower": 65,
+        "clutch": 50,
+        "consistency": 57,
+        "support": 23
+      },
+      "breakdown": {
+        "baseIndividual": 54.2,
+        "placementBonus": 20,
+        "roleAdjust": 0
+      }
+    },
+    {
+      "cardId": "3885@2281",
+      "playerId": "3885",
+      "eventId": "2281",
+      "teamTag": "G2",
+      "role": "controller",
+      "isFlex": false,
+      "rolesPlayed": [
+        "controller"
+      ],
+      "overall": 83,
+      "subAttributes": {
+        "aim": 39,
+        "firepower": 39,
+        "clutch": 35,
+        "consistency": 70,
+        "support": 57
+      },
+      "breakdown": {
+        "baseIndividual": 47.9,
+        "placementBonus": 15,
+        "roleAdjust": 3
+      }
+    },
+    {
+      "cardId": "7873@2281",
+      "playerId": "7873",
+      "eventId": "2281",
+      "teamTag": "G2",
+      "role": "sentinel",
+      "isFlex": true,
+      "rolesPlayed": [
+        "sentinel",
+        "controller"
+      ],
+      "overall": 81,
+      "subAttributes": {
+        "aim": 46,
+        "firepower": 49,
+        "clutch": 30,
+        "consistency": 63,
+        "support": 25
+      },
+      "breakdown": {
+        "baseIndividual": 49.1,
+        "placementBonus": 15,
+        "roleAdjust": 1
+      }
+    },
+    {
+      "cardId": "36245@2281",
+      "playerId": "36245",
+      "eventId": "2281",
+      "teamTag": "SEN",
+      "role": "initiator",
+      "isFlex": false,
+      "rolesPlayed": [
+        "initiator",
+        "controller"
+      ],
+      "overall": 67,
+      "subAttributes": {
+        "aim": 51,
+        "firepower": 50,
+        "clutch": 33,
+        "consistency": 70,
+        "support": 48
+      },
+      "breakdown": {
+        "baseIndividual": 48.5,
+        "placementBonus": 0,
+        "roleAdjust": 2
+      }
+    },
+    {
+      "cardId": "13039@2281",
+      "playerId": "13039",
+      "eventId": "2281",
+      "teamTag": "T1",
+      "role": "controller",
+      "isFlex": true,
+      "rolesPlayed": [
+        "controller",
+        "sentinel"
+      ],
+      "overall": 89,
+      "subAttributes": {
+        "aim": 69,
+        "firepower": 64,
+        "clutch": 40,
+        "consistency": 53,
+        "support": 22
+      },
+      "breakdown": {
+        "baseIndividual": 49.5,
+        "placementBonus": 20,
+        "roleAdjust": 3
+      }
+    },
+    {
+      "cardId": "8447@2281",
+      "playerId": "8447",
+      "eventId": "2281",
+      "teamTag": "VIT",
+      "role": "controller",
+      "isFlex": true,
+      "rolesPlayed": [
+        "controller",
+        "sentinel"
+      ],
+      "overall": 74,
+      "subAttributes": {
+        "aim": 54,
+        "firepower": 40,
+        "clutch": 50,
+        "consistency": 43,
+        "support": 35
+      },
+      "breakdown": {
+        "baseIndividual": 41.1,
+        "placementBonus": 10,
+        "roleAdjust": 3
+      }
+    },
+    {
+      "cardId": "3993@2281",
+      "playerId": "3993",
+      "eventId": "2281",
+      "teamTag": "G2",
+      "role": "duelist",
+      "isFlex": false,
+      "rolesPlayed": [
+        "duelist"
+      ],
+      "overall": 79,
+      "subAttributes": {
+        "aim": 47,
+        "firepower": 54,
+        "clutch": 95,
+        "consistency": 53,
+        "support": 32
+      },
+      "breakdown": {
+        "baseIndividual": 46.5,
+        "placementBonus": 15,
+        "roleAdjust": 0
+      }
+    },
+    {
+      "cardId": "4056@2281",
+      "playerId": "4056",
+      "eventId": "2281",
+      "teamTag": "T1",
+      "role": "controller",
+      "isFlex": false,
+      "rolesPlayed": [
+        "controller"
+      ],
+      "overall": 84,
+      "subAttributes": {
+        "aim": 47,
+        "firepower": 35,
+        "clutch": 43,
+        "consistency": 73,
+        "support": 90
+      },
+      "breakdown": {
+        "baseIndividual": 42.5,
+        "placementBonus": 20,
+        "roleAdjust": 3
+      }
+    },
+    {
+      "cardId": "3520@2281",
+      "playerId": "3520",
+      "eventId": "2281",
+      "teamTag": "EDG",
+      "role": "duelist",
+      "isFlex": false,
+      "rolesPlayed": [
+        "duelist"
+      ],
+      "overall": 74,
+      "subAttributes": {
+        "aim": 51,
+        "firepower": 71,
+        "clutch": 10,
+        "consistency": 50,
+        "support": 15
+      },
+      "breakdown": {
+        "baseIndividual": 46.8,
+        "placementBonus": 10,
+        "roleAdjust": 0
+      }
+    },
+    {
+      "cardId": "485@2281",
+      "playerId": "485",
+      "eventId": "2281",
+      "teamTag": "T1",
+      "role": "initiator",
+      "isFlex": false,
+      "rolesPlayed": [
+        "initiator"
+      ],
+      "overall": 82,
+      "subAttributes": {
+        "aim": 52,
+        "firepower": 28,
+        "clutch": 43,
+        "consistency": 63,
+        "support": 40
+      },
+      "breakdown": {
+        "baseIndividual": 39.7,
+        "placementBonus": 20,
+        "roleAdjust": 2
+      }
+    },
+    {
+      "cardId": "4742@2281",
+      "playerId": "4742",
+      "eventId": "2281",
+      "teamTag": "EDG",
+      "role": "controller",
+      "isFlex": false,
+      "rolesPlayed": [
+        "controller"
+      ],
+      "overall": 74,
+      "subAttributes": {
+        "aim": 54,
+        "firepower": 38,
+        "clutch": 50,
+        "consistency": 63,
+        "support": 65
+      },
+      "breakdown": {
+        "baseIndividual": 41,
+        "placementBonus": 10,
+        "roleAdjust": 3
+      }
+    },
+    {
+      "cardId": "35013@2281",
+      "playerId": "35013",
+      "eventId": "2281",
+      "teamTag": "KRX",
+      "role": "sentinel",
+      "isFlex": false,
+      "rolesPlayed": [
+        "sentinel"
+      ],
+      "overall": 60,
+      "subAttributes": {
+        "aim": 44,
+        "firepower": 40,
+        "clutch": 20,
+        "consistency": 53,
+        "support": 12
+      },
+      "breakdown": {
+        "baseIndividual": 38.4,
+        "placementBonus": 0,
+        "roleAdjust": 1
+      }
+    },
+    {
+      "cardId": "14681@2281",
+      "playerId": "14681",
+      "eventId": "2281",
+      "teamTag": "TL",
+      "role": "duelist",
+      "isFlex": false,
+      "rolesPlayed": [
+        "duelist"
+      ],
+      "overall": 60,
+      "subAttributes": {
+        "aim": 54,
+        "firepower": 59,
+        "clutch": 33,
+        "consistency": 37,
+        "support": 8
+      },
+      "breakdown": {
+        "baseIndividual": 40.2,
+        "placementBonus": 0,
+        "roleAdjust": 0
+      }
+    },
+    {
+      "cardId": "4581@2281",
+      "playerId": "4581",
+      "eventId": "2281",
+      "teamTag": "G2",
+      "role": "initiator",
+      "isFlex": true,
+      "rolesPlayed": [
+        "initiator",
+        "sentinel"
+      ],
+      "overall": 77,
+      "subAttributes": {
+        "aim": 42,
+        "firepower": 36,
+        "clutch": 23,
+        "consistency": 77,
+        "support": 60
+      },
+      "breakdown": {
+        "baseIndividual": 40.3,
+        "placementBonus": 15,
+        "roleAdjust": 2
+      }
+    },
+    {
+      "cardId": "11134@2281",
+      "playerId": "11134",
+      "eventId": "2281",
+      "teamTag": "VIT",
+      "role": "initiator",
+      "isFlex": true,
+      "rolesPlayed": [
+        "initiator",
+        "controller"
+      ],
+      "overall": 68,
+      "subAttributes": {
+        "aim": 44,
+        "firepower": 30,
+        "clutch": 55,
+        "consistency": 60,
+        "support": 44
+      },
+      "breakdown": {
+        "baseIndividual": 32.9,
+        "placementBonus": 10,
+        "roleAdjust": 2
+      }
+    },
+    {
+      "cardId": "3017@2281",
+      "playerId": "3017",
+      "eventId": "2281",
+      "teamTag": "EDG",
+      "role": "initiator",
+      "isFlex": false,
+      "rolesPlayed": [
+        "initiator"
+      ],
+      "overall": 68,
+      "subAttributes": {
+        "aim": 52,
+        "firepower": 34,
+        "clutch": 10,
+        "consistency": 53,
+        "support": 22
+      },
+      "breakdown": {
+        "baseIndividual": 32.7,
+        "placementBonus": 10,
+        "roleAdjust": 2
+      }
+    },
+    {
+      "cardId": "3880@2281",
+      "playerId": "3880",
+      "eventId": "2281",
+      "teamTag": "SEN",
+      "role": "controller",
+      "isFlex": false,
+      "rolesPlayed": [
+        "controller"
+      ],
+      "overall": 57,
+      "subAttributes": {
+        "aim": 55,
+        "firepower": 40,
+        "clutch": 63,
+        "consistency": 43,
+        "support": 37
+      },
+      "breakdown": {
+        "baseIndividual": 30.3,
+        "placementBonus": 0,
+        "roleAdjust": 3
+      }
+    },
+    {
+      "cardId": "37494@2281",
+      "playerId": "37494",
+      "eventId": "2281",
+      "teamTag": "TE",
+      "role": "sentinel",
+      "isFlex": true,
+      "rolesPlayed": [
+        "sentinel",
+        "duelist"
+      ],
+      "overall": 54,
+      "subAttributes": {
+        "aim": 59,
+        "firepower": 52,
+        "clutch": 20,
+        "consistency": 23,
+        "support": 3
+      },
+      "breakdown": {
+        "baseIndividual": 28.5,
+        "placementBonus": 0,
+        "roleAdjust": 1
+      }
+    },
+    {
+      "cardId": "4004@2281",
+      "playerId": "4004",
+      "eventId": "2281",
+      "teamTag": "SEN",
+      "role": "duelist",
+      "isFlex": false,
+      "rolesPlayed": [
+        "duelist"
+      ],
+      "overall": 56,
+      "subAttributes": {
+        "aim": 54,
+        "firepower": 51,
+        "clutch": 35,
+        "consistency": 47,
+        "support": 2
+      },
+      "breakdown": {
+        "baseIndividual": 33.8,
+        "placementBonus": 0,
+        "roleAdjust": 0
+      }
+    },
+    {
+      "cardId": "4462@2281",
+      "playerId": "4462",
+      "eventId": "2281",
+      "teamTag": "KRX",
+      "role": "controller",
+      "isFlex": false,
+      "rolesPlayed": [
+        "controller"
+      ],
+      "overall": 58,
+      "subAttributes": {
+        "aim": 38,
+        "firepower": 24,
+        "clutch": 33,
+        "consistency": 63,
+        "support": 63
+      },
+      "breakdown": {
+        "baseIndividual": 31.1,
+        "placementBonus": 0,
+        "roleAdjust": 3
+      }
+    },
+    {
+      "cardId": "28400@2281",
+      "playerId": "28400",
+      "eventId": "2281",
+      "teamTag": "KRX",
+      "role": "duelist",
+      "isFlex": false,
+      "rolesPlayed": [
+        "duelist"
+      ],
+      "overall": 56,
+      "subAttributes": {
+        "aim": 62,
+        "firepower": 55,
+        "clutch": 0,
+        "consistency": 53,
+        "support": 20
+      },
+      "breakdown": {
+        "baseIndividual": 33.3,
+        "placementBonus": 0,
+        "roleAdjust": 0
+      }
+    },
+    {
+      "cardId": "1475@2281",
+      "playerId": "1475",
+      "eventId": "2281",
+      "teamTag": "TL",
+      "role": "controller",
+      "isFlex": true,
+      "rolesPlayed": [
+        "controller",
+        "initiator"
+      ],
+      "overall": 56,
+      "subAttributes": {
+        "aim": 54,
+        "firepower": 29,
+        "clutch": 25,
+        "consistency": 63,
+        "support": 25
+      },
+      "breakdown": {
+        "baseIndividual": 27.7,
+        "placementBonus": 0,
+        "roleAdjust": 3
+      }
+    },
+    {
+      "cardId": "3021@2281",
+      "playerId": "3021",
+      "eventId": "2281",
+      "teamTag": "TE",
+      "role": "initiator",
+      "isFlex": false,
+      "rolesPlayed": [
+        "initiator"
+      ],
+      "overall": 48,
+      "subAttributes": {
+        "aim": 27,
+        "firepower": 24,
+        "clutch": 55,
+        "consistency": 13,
+        "support": 23
+      },
+      "breakdown": {
+        "baseIndividual": 16.1,
+        "placementBonus": 0,
+        "roleAdjust": 2
+      }
+    },
+    {
+      "cardId": "13768@2281",
+      "playerId": "13768",
+      "eventId": "2281",
+      "teamTag": "EDG",
+      "role": "initiator",
+      "isFlex": false,
+      "rolesPlayed": [
+        "initiator"
+      ],
+      "overall": 63,
+      "subAttributes": {
+        "aim": 45,
+        "firepower": 18,
+        "clutch": 43,
+        "consistency": 53,
+        "support": 54
+      },
+      "breakdown": {
+        "baseIndividual": 18.3,
+        "placementBonus": 10,
+        "roleAdjust": 2
+      }
+    },
+    {
+      "cardId": "1265@2281",
+      "playerId": "1265",
+      "eventId": "2281",
+      "teamTag": "SEN",
+      "role": "controller",
+      "isFlex": true,
+      "rolesPlayed": [
+        "controller",
+        "initiator"
+      ],
+      "overall": 52,
+      "subAttributes": {
+        "aim": 25,
+        "firepower": 24,
+        "clutch": 0,
+        "consistency": 67,
+        "support": 25
+      },
+      "breakdown": {
+        "baseIndividual": 21.6,
+        "placementBonus": 0,
+        "roleAdjust": 3
+      }
+    },
+    {
+      "cardId": "729@2281",
+      "playerId": "729",
+      "eventId": "2281",
+      "teamTag": "SEN",
+      "role": "sentinel",
+      "isFlex": true,
+      "rolesPlayed": [
+        "sentinel",
+        "initiator",
+        "controller"
+      ],
+      "overall": 46,
+      "subAttributes": {
+        "aim": 25,
+        "firepower": 17,
+        "clutch": 0,
+        "consistency": 50,
+        "support": 48
+      },
+      "breakdown": {
+        "baseIndividual": 14.5,
+        "placementBonus": 0,
+        "roleAdjust": 1
+      }
+    },
+    {
+      "cardId": "312@2281",
+      "playerId": "312",
+      "eventId": "2281",
+      "teamTag": "VIT",
+      "role": "initiator",
+      "isFlex": true,
+      "rolesPlayed": [
+        "initiator",
+        "sentinel",
+        "duelist"
+      ],
+      "overall": 63,
+      "subAttributes": {
+        "aim": 30,
+        "firepower": 22,
+        "clutch": 23,
+        "consistency": 47,
+        "support": 25
+      },
+      "breakdown": {
+        "baseIndividual": 11.8,
+        "placementBonus": 10,
+        "roleAdjust": 2
+      }
+    },
+    {
+      "cardId": "3045@2281",
+      "playerId": "3045",
+      "eventId": "2281",
+      "teamTag": "TE",
+      "role": "controller",
+      "isFlex": false,
+      "rolesPlayed": [
+        "controller"
+      ],
+      "overall": 45,
+      "subAttributes": {
+        "aim": 54,
+        "firepower": 21,
+        "clutch": 0,
+        "consistency": 37,
+        "support": 35
+      },
+      "breakdown": {
+        "baseIndividual": 9.4,
+        "placementBonus": 0,
+        "roleAdjust": 3
+      }
+    },
+    {
+      "cardId": "309@2281",
+      "playerId": "309",
+      "eventId": "2281",
+      "teamTag": "TL",
+      "role": "initiator",
+      "isFlex": true,
+      "rolesPlayed": [
+        "initiator",
+        "sentinel"
+      ],
+      "overall": 44,
+      "subAttributes": {
+        "aim": 33,
+        "firepower": 15,
+        "clutch": 18,
+        "consistency": 50,
+        "support": 55
+      },
+      "breakdown": {
+        "baseIndividual": 9.2,
+        "placementBonus": 0,
+        "roleAdjust": 2
+      }
+    },
+    {
+      "cardId": "4712@2281",
+      "playerId": "4712",
+      "eventId": "2281",
+      "teamTag": "TE",
+      "role": "controller",
+      "isFlex": true,
+      "rolesPlayed": [
+        "controller",
+        "initiator"
+      ],
+      "overall": 40,
+      "subAttributes": {
+        "aim": 33,
+        "firepower": 11,
+        "clutch": 0,
+        "consistency": 13,
+        "support": 33
+      },
+      "breakdown": {
+        "baseIndividual": 0.5,
+        "placementBonus": 0,
+        "roleAdjust": 3
+      }
+    },
+    {
+      "cardId": "31207@2281",
+      "playerId": "31207",
+      "eventId": "2281",
+      "teamTag": "T1",
+      "role": "controller",
+      "isFlex": false,
+      "rolesPlayed": [
+        "controller"
+      ],
+      "overall": 75,
+      "subAttributes": {
+        "aim": 36,
+        "firepower": 16,
+        "clutch": 63,
+        "consistency": 40,
+        "support": 47
+      },
+      "breakdown": {
+        "baseIndividual": 5,
+        "placementBonus": 20,
+        "roleAdjust": 3
+      }
+    },
+    {
+      "cardId": "4770@2281",
+      "playerId": "4770",
+      "eventId": "2281",
+      "teamTag": "TE",
+      "role": "duelist",
+      "isFlex": true,
+      "rolesPlayed": [
+        "duelist",
+        "controller",
+        "sentinel"
+      ],
+      "overall": 40,
+      "subAttributes": {
+        "aim": 27,
+        "firepower": 22,
+        "clutch": 33,
+        "consistency": 7,
+        "support": 10
+      },
+      "breakdown": {
+        "baseIndividual": 2.6,
+        "placementBonus": 0,
+        "roleAdjust": 0
+      }
+    }
+  ],
+  "meta": {
+    "scrapedAt": "2026-06-17T00:46:47.807Z",
+    "pipelineVersion": "0.1.0"
+  }
+}
