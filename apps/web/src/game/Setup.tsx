@@ -63,7 +63,7 @@ export function Setup({ onStart }: { onStart: (c: SetupChoice) => void }) {
             className={`option-card ${mode === "almanac" ? "is-active" : ""}`}
             onClick={() => setMode("almanac")}
           >
-            <div className="option-title">{t("Almanaque")}</div>
+            <div className="option-title">{t("Difícil")}</div>
             <div className="option-desc">
               Overall <b>{t("oculto")}</b> — {t("escolhe no conhecimento (nome, role, time, campeonato).")}
             </div>

@@ -29,9 +29,9 @@ const ES: Record<string, string> = {
   "Formação · escolha a role de cada posição": "Formación · elige la role de cada posición",
   "Modo": "Modo",
   "Clássico": "Clásico",
-  "Almanaque": "Almanaque",
   "Overall visível durante o draft.": "Overall visible durante el draft.",
   "oculto": "oculto",
+  "Overall oculto": "Overall oculto",
   "escolhe no conhecimento (nome, role, time, campeonato).": "eliges por conocimiento (nombre, role, equipo, campeonato).",
   "Começar draft →": "Empezar draft →",
 
@@ -53,8 +53,8 @@ const ES: Record<string, string> = {
   // Campaign config
   "Seu time": "Tu equipo",
   "Força do time": "Fuerza del equipo",
-  "Enfrenta 15 elencos históricos: fase de grupos → playoffs (chave dupla) → grande final MD5. Mesmo seed + mesma comp = mesma campanha.":
-    "Enfrenta 15 planteles históricos: fase de grupos → playoffs (llave doble) → gran final MD5. Mismo seed + misma comp = misma campaña.",
+  "Enfrenta 15 elencos históricos: fase de grupos → playoffs (chave dupla) → grande final MD5.":
+    "Enfrenta 15 planteles históricos: fase de grupos → playoffs (llave doble) → gran final MD5.",
   "Gerar outro": "Generar otro",
   "Jogo a jogo (round a round)": "Partido a partido (ronda a ronda)",
   "Automático": "Automático",
@@ -79,10 +79,12 @@ const ES: Record<string, string> = {
 
   // Final card
   "Caminho da campanha": "Camino de la campaña",
-  "Compartilhar run": "Compartir run",
-  "Link copiado!": "¡Link copiado!",
+  "Compartilhar imagem": "Compartir imagen",
+  "Imagem copiada!": "¡Imagen copiada!",
+  "Imagem salva!": "¡Imagen guardada!",
   "Nova run": "Nueva run",
-  "Copie o link da sua run:": "Copia el link de tu run:",
+  "Difícil": "Difícil",
+  "Feito no modo difícil (overall oculto)": "Hecho en modo difícil (overall oculto)",
 
   // Bracket
   "Grupos": "Grupos",
@@ -160,9 +162,9 @@ const EN: Record<string, string> = {
   "Formação · escolha a role de cada posição": "Formation · pick each position's role",
   "Modo": "Mode",
   "Clássico": "Classic",
-  "Almanaque": "Almanac",
   "Overall visível durante o draft.": "Overall visible during the draft.",
   "oculto": "hidden",
+  "Overall oculto": "Overall hidden",
   "escolhe no conhecimento (nome, role, time, campeonato).": "pick by knowledge (name, role, team, championship).",
   "Começar draft →": "Start draft →",
 
@@ -184,8 +186,8 @@ const EN: Record<string, string> = {
   // Campaign config
   "Seu time": "Your team",
   "Força do time": "Team strength",
-  "Enfrenta 15 elencos históricos: fase de grupos → playoffs (chave dupla) → grande final MD5. Mesmo seed + mesma comp = mesma campanha.":
-    "Face 15 historic rosters: group stage → playoffs (double elim) → MD5 grand final. Same seed + same comp = same campaign.",
+  "Enfrenta 15 elencos históricos: fase de grupos → playoffs (chave dupla) → grande final MD5.":
+    "Face 15 historic rosters: group stage → playoffs (double elim) → MD5 grand final.",
   "Gerar outro": "Generate another",
   "Jogo a jogo (round a round)": "Game by game (round by round)",
   "Automático": "Automatic",
@@ -210,10 +212,12 @@ const EN: Record<string, string> = {
 
   // Final card
   "Caminho da campanha": "Campaign path",
-  "Compartilhar run": "Share run",
-  "Link copiado!": "Link copied!",
+  "Compartilhar imagem": "Share image",
+  "Imagem copiada!": "Image copied!",
+  "Imagem salva!": "Image saved!",
   "Nova run": "New run",
-  "Copie o link da sua run:": "Copy your run link:",
+  "Difícil": "Hard",
+  "Feito no modo difícil (overall oculto)": "Done in hard mode (overall hidden)",
 
   // Bracket
   "Grupos": "Groups",

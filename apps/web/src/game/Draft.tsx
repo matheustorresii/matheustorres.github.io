@@ -151,7 +151,7 @@ export function Draft({
     <div className="draft">
       <div className="draft-head">
         <h2>{t("Draft")} <span className="counter">{filled}/{slots.length}</span></h2>
-        <span className="rerolls">{t("Rerolls:")} <b>{rerolls}</b> · {mode === "classic" ? t("Clássico") : t("Almanaque")}</span>
+        <span className="rerolls">{t("Rerolls:")} <b>{rerolls}</b> · {mode === "classic" ? t("Clássico") : t("Difícil")}</span>
       </div>
 
       <div className="comp">
@@ -167,8 +167,10 @@ export function Draft({
               <div className={`role-badge chip-${s.role}`}>{ROLE_ABBR_PT[s.role]}</div>
               {s.pick ? (
                 <div className="comp-filled pop-in">
-                  {mode === "classic" && (
+                  {mode === "classic" ? (
                     <span className={`${overallClass(s.pick.player.overall)} comp-ovr`}>{s.pick.player.overall}</span>
+                  ) : (
+                    <span className="ovr ovr-hidden comp-ovr" title={t("Overall oculto")}>?</span>
                   )}
                   <div className="comp-name">{s.pick.player.displayName}</div>
                   <div className="comp-src muted">{s.pick.squad.teamName} · {s.pick.squad.year}</div>

@@ -13,7 +13,7 @@ import {
 import { Bracket } from "./Bracket.js";
 import { FinalCard } from "./FinalCard.js";
 import { usePersisted } from "../usePersisted.js";
-import type { Pick } from "./types.js";
+import type { Pick, GameMode } from "./types.js";
 
 type Phase = "config" | "watch" | "final";
 
@@ -29,16 +29,17 @@ export function Campaign({
   picks,
   pool,
   onRestart,
-  initialSeed,
+  mode,
 }: {
   picks: Pick[];
   pool: DraftSquad[];
   onRestart: () => void;
-  initialSeed?: string;
+  mode: GameMode;
 }) {
   const t = useT();
   const [phase, setPhase] = useState<Phase>("config");
-  const [seed, setSeed] = useState(initialSeed || randomSeedText());
+  // Seed is generated once for run determinism; no longer user-editable/shared.
+  const [seed] = useState(randomSeedText());
   const [speed, setSpeed] = usePersisted<number>("11a3.speed", SPEEDS[1]!.ms, isSpeed);
   const [data, setData] = useState<CampaignData | null>(null);
 
@@ -89,20 +90,8 @@ export function Campaign({
           ))}
         </div>
         <p className="muted">
-          {t("Enfrenta 15 elencos históricos: fase de grupos → playoffs (chave dupla) → grande final MD5. Mesmo seed + mesma comp = mesma campanha.")}
+          {t("Enfrenta 15 elencos históricos: fase de grupos → playoffs (chave dupla) → grande final MD5.")}
         </p>
-        <label className="seed-field">
-          SEED
-          <div className="seed-row">
-            <span className="hash">#</span>
-            <input
-              value={seed}
-              maxLength={8}
-              onChange={(e) => setSeed(e.target.value.replace(/[^A-Za-z0-9]/g, "").toUpperCase())}
-            />
-            <button onClick={() => setSeed(randomSeedText())} title={t("Gerar outro")}>🎲</button>
-          </div>
-        </label>
         <div className="camp-start">
           <button className="btn-primary big" onClick={() => start("watch")}>
             ▶ {t("Jogo a jogo (round a round)")}
@@ -116,7 +105,7 @@ export function Campaign({
   }
 
   if (phase === "final" && data) {
-    return <FinalCard picks={picks} campaign={data} onRestart={onRestart} />;
+    return <FinalCard picks={picks} campaign={data} onRestart={onRestart} mode={mode} />;
   }
 
   if (phase === "watch" && data) {

@@ -1,9 +1,14 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { toBlob } from "html-to-image";
 import { ROLE_LABEL_PT, overallClass } from "../labels.js";
 import { useT } from "../i18n.js";
 import { USER_ID, type Campaign } from "./engine.js";
-import { shareUrl } from "./share.js";
-import type { Pick } from "./types.js";
+import type { Pick, GameMode } from "./types.js";
+
+type ShareNav = Navigator & {
+  canShare?: (data?: { files?: File[] }) => boolean;
+  share?: (data?: { files?: File[] }) => Promise<void>;
+};
 
 const PLACE_EMOJI: Record<string, string> = {
   Campeão: "🏆",
@@ -15,30 +20,71 @@ export function FinalCard({
   picks,
   campaign,
   onRestart,
+  mode,
 }: {
   picks: Pick[];
   campaign: Campaign;
   onRestart: () => void;
+  mode: GameMode;
 }) {
   const t = useT();
   const isChampion = campaign.finalPlace === "Campeão";
   const avg = Math.round(campaign.userTeam.strength);
-  const [copied, setCopied] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [shared, setShared] = useState<"" | "copied" | "saved">("");
+  const [busy, setBusy] = useState(false);
 
-  const copyLink = async () => {
-    const url = shareUrl(picks, campaign.seed);
+  // Export the card as a PNG. Mobile → native share sheet; desktop → clipboard;
+  // fallback → download. (No more shareable link — that let people copy runs.)
+  const shareImage = async () => {
+    const node = cardRef.current;
+    if (!node || busy) return;
+    setBusy(true);
     try {
-      await navigator.clipboard.writeText(url);
-    } catch {
-      window.prompt(t("Copie o link da sua run:"), url);
+      // Make sure the display fonts are loaded so the capture isn't rendered
+      // with a fallback face.
+      if (document.fonts?.ready) await document.fonts.ready;
+      const bg = getComputedStyle(document.documentElement).getPropertyValue("--bg").trim();
+      const blob = await toBlob(node, { pixelRatio: 2, backgroundColor: bg || "#0e1014", cacheBust: true });
+      if (!blob) return;
+      const file = new File([blob], "11a3.png", { type: "image/png" });
+      const nav = navigator as ShareNav;
+
+      if (nav.canShare?.({ files: [file] }) && nav.share) {
+        try {
+          await nav.share({ files: [file] });
+          return;
+        } catch {
+          /* user dismissed the sheet → fall through to clipboard/download */
+        }
+      }
+      try {
+        await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+        setShared("copied");
+      } catch {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "11a3.png";
+        a.click();
+        URL.revokeObjectURL(url);
+        setShared("saved");
+      }
+      setTimeout(() => setShared(""), 2400);
+    } finally {
+      setBusy(false);
     }
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
   };
 
   return (
     <div className="final-wrap">
-      <div className={`final-card ${isChampion ? "is-champion" : ""}`}>
+      <div ref={cardRef} className={`final-card ${isChampion ? "is-champion" : ""}`}>
+        {mode === "almanac" && (
+          <div className="hard-seal" title={t("Feito no modo difícil (overall oculto)")}>
+            <span className="hs-top">{t("Modo")}</span>
+            <span className="hs-main">{t("Difícil")}</span>
+          </div>
+        )}
         <div className="final-head">
           <div className="final-place">
             {PLACE_EMOJI[campaign.finalPlace] ?? "🎯"} {t(campaign.finalPlace)}
@@ -90,8 +136,12 @@ export function FinalCard({
       </div>
 
       <div className="final-actions">
-        <button className="btn-ghost big" onClick={copyLink}>
-          {copied ? `✓ ${t("Link copiado!")}` : `🔗 ${t("Compartilhar run")}`}
+        <button className="btn-ghost big" onClick={shareImage} disabled={busy}>
+          {shared === "copied"
+            ? `✓ ${t("Imagem copiada!")}`
+            : shared === "saved"
+              ? `✓ ${t("Imagem salva!")}`
+              : `🖼 ${t("Compartilhar imagem")}`}
         </button>
         <button className="btn-primary big" onClick={onRestart}>
           {t("Nova run")}
