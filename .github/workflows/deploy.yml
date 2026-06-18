@@ -1,0 +1,68 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Permissions the deploy-pages action needs.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deploy at a time; newer pushes cancel in-flight runs.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      # Base path differs by host:
+      #   - custom domain (apps/web/public/CNAME present) → served at root → "/"
+      #   - default github.io project site → served at "/<repo>/"
+      - name: Compute base path
+        id: base
+        run: |
+          if [ -f apps/web/public/CNAME ]; then
+            echo "base=/" >> "$GITHUB_OUTPUT"
+          else
+            echo "base=/${{ github.event.repository.name }}/" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build
+        run: npm run build
+        env:
+          VITE_BASE: ${{ steps.base.outputs.base }}
+
+      - name: SPA fallback + slim data + disable Jekyll
+        run: |
+          cd apps/web/dist
+          cp index.html 404.html          # client routing (/dev) survives reloads
+          rm -rf data/cache data/ingest_status.json  # drop ~4.7MB scraper cache
+          touch .nojekyll                 # serve files/dirs starting with "_"
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: apps/web/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
