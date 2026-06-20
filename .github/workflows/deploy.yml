@@ -49,7 +49,7 @@ jobs:
       - name: SPA fallback + slim data + disable Jekyll
         run: |
           cd apps/web/dist
-          cp index.html 404.html          # client routing (/dev) survives reloads
+          cp index.html 404.html          # SPA fallback: deep links survive reloads
           rm -rf data/cache data/ingest_status.json  # drop ~4.7MB scraper cache
           touch .nojekyll                 # serve files/dirs starting with "_"
 

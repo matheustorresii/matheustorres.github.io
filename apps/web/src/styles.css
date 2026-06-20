@@ -622,11 +622,6 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
   .bracket { padding: 12px 10px; border-radius: 10px; }
   .br-groups { grid-template-columns: repeat(2, 1fr); }
   .br-col { min-width: 122px; }
-
-  /* Inspector (/dev): stop the fixed 4-col row from overflowing. */
-  .player { grid-template-columns: 40px 1fr; gap: 6px 10px; }
-  .player .stats { grid-column: 1 / -1; }
-  .search-results { grid-template-columns: 1fr; }
 }
 
 /* Very small phones (~320–360px): one column where 2 still crowds. */

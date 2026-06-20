@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
 import { Game } from "./game/Game.js";
-import { Inspector } from "./App.js";
 import { Settings } from "./Settings.js";
 import { ComingSoon } from "./ComingSoon.js";
 import { GAMES, gameById, isGameId, type GameId } from "./games.js";
@@ -12,12 +11,6 @@ export function App() {
   const [theme, setTheme] = usePersisted<Theme>("11a3.theme", "dark", isTheme);
   const [game, setGame] = usePersisted<GameId>("11a3.game", "valorant", isGameId);
   const [gameKey, setGameKey] = useState(0);
-
-  // Match "/dev" even under a Pages base path (e.g. "/11a3/dev"); tolerate a
-  // trailing slash.
-  const isDev =
-    typeof location !== "undefined" &&
-    location.pathname.replace(/\/+$/, "").endsWith("/dev");
 
   // Only games with data are selectable. With a single ready game the tab bar
   // collapses (v0 = Valorant-only); flip a game's `ready` flag in games.ts to
@@ -36,10 +29,6 @@ export function App() {
   const t = useCallback((s: string) => tr(lang, s), [lang]);
 
   const goHome = () => {
-    if (isDev) {
-      location.assign(import.meta.env.BASE_URL);
-      return;
-    }
     if (location.hash) history.replaceState(null, "", location.pathname);
     setGameKey((k) => k + 1);
   };
@@ -58,7 +47,7 @@ export function App() {
             <span className="logo">11<span className="logo-a">A</span>3</span>
           </button>
 
-          {!isDev && playable.length > 1 && (
+          {playable.length > 1 && (
             <nav className="tabs game-tabs">
               {playable.map((g) => (
                 <button
@@ -85,9 +74,7 @@ export function App() {
           </div>
         </header>
 
-        {isDev ? (
-          <Inspector />
-        ) : current.ready ? (
+        {current.ready ? (
           <Game key={`${current.id}-${gameKey}`} dataUrl={current.dataUrl} />
         ) : (
           <ComingSoon game={current} />
