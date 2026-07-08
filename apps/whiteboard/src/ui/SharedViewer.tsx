@@ -3,13 +3,12 @@ import type { Board } from "../types/model";
 import { SCHEMA_VERSION } from "../types/model";
 import { goHome, goToBoard } from "../router";
 import { CanvasRoot } from "../canvas/CanvasRoot";
-import { getGistFirstFile } from "../sync/github";
-import { fromPortableJSON } from "../sync/portable";
+import { decodeBoardFromPayload } from "../sync/shareLink";
 import { putBoard } from "../persistence/boardsRepo";
 import { makeThumbnail } from "../persistence/thumbnails";
 import { newId } from "../lib/id";
 
-export function SharedViewer({ gistId }: { gistId: string }) {
+export function SharedViewer({ payload }: { payload: string }) {
   const hostRef = useRef<HTMLDivElement>(null);
   const boardRef = useRef<Board | null>(null);
   const [state, setState] = useState<"loading" | "error" | "ready">("loading");
@@ -18,19 +17,14 @@ export function SharedViewer({ gistId }: { gistId: string }) {
     let root: CanvasRoot | null = null;
     let cancelled = false;
     void (async () => {
-      const text = await getGistFirstFile(gistId);
-      if (cancelled) return;
-      if (!text) {
-        setState("error");
-        return;
-      }
       let board: Board;
       try {
-        board = fromPortableJSON(text);
+        board = await decodeBoardFromPayload(payload);
       } catch {
-        setState("error");
+        if (!cancelled) setState("error");
         return;
       }
+      if (cancelled) return;
       boardRef.current = board;
       setState("ready");
       // mount read-only canvas after the host is in the DOM
@@ -49,7 +43,7 @@ export function SharedViewer({ gistId }: { gistId: string }) {
       cancelled = true;
       root?.destroy();
     };
-  }, [gistId]);
+  }, [payload]);
 
   const importMine = async () => {
     const src = boardRef.current;
@@ -78,7 +72,7 @@ export function SharedViewer({ gistId }: { gistId: string }) {
       <div className="empty" style={{ pointerEvents: "auto" }}>
         <div className="big">11A3</div>
         <div>Não foi possível abrir este board compartilhado.</div>
-        <div className="hint">O link pode ter expirado ou o gist foi removido.</div>
+        <div className="hint">O link parece inválido ou incompleto (foi cortado ao copiar?).</div>
         <button className="btn btn-primary" onClick={goHome}>
           Ir para o 11A3
         </button>

@@ -9,7 +9,7 @@ export function App() {
   useEffect(() => onRouteChange(setRoute), []);
 
   if (route.kind === "shared") {
-    return <SharedViewer gistId={route.gistId} />;
+    return <SharedViewer payload={route.payload} />;
   }
   return <Workspace route={route} />;
 }

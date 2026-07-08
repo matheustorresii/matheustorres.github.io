@@ -130,37 +130,3 @@ export async function putContent(
   const data = (await res.json()) as { content: { sha: string } };
   return { sha: data.content.sha };
 }
-
-/** Create a secret gist (used for read-only sharing, Phase 9). */
-export async function createSecretGist(
-  cfg: GitHubConfig,
-  filename: string,
-  text: string,
-  description: string,
-): Promise<string> {
-  const res = await fetch(`${API}/gists`, {
-    method: "POST",
-    headers: { ...headers(cfg.pat), "Content-Type": "application/json" },
-    body: JSON.stringify({
-      description,
-      public: false,
-      files: { [filename]: { content: text } },
-    }),
-  });
-  if (!res.ok) throw new GitHubError(res.status, `POST /gists → ${res.status}`);
-  const data = (await res.json()) as { id: string };
-  return data.id;
-}
-
-/** Read a gist's first file, no auth needed for a secret gist you know the id of. */
-export async function getGistFirstFile(gistId: string): Promise<string | null> {
-  const res = await fetch(`${API}/gists/${gistId}`, {
-    headers: { Accept: "application/vnd.github+json" },
-  });
-  if (!res.ok) return null;
-  const data = (await res.json()) as {
-    files: Record<string, { content: string }>;
-  };
-  const first = Object.values(data.files)[0];
-  return first ? first.content : null;
-}
