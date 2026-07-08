@@ -3,8 +3,13 @@ import { SCHEMA_VERSION as SV } from "../types/model";
 import * as boardsRepo from "../persistence/boardsRepo";
 import * as foldersRepo from "../persistence/foldersRepo";
 import { makeThumbnail } from "../persistence/thumbnails";
+import {
+  getTombstones,
+  mergeTombstones,
+  type Tombstone,
+} from "../persistence/tombstones";
 import { toPortableJSON, fromPortableJSON } from "./portable";
-import { getContent, putContent, type GitHubConfig } from "./github";
+import { deleteContent, getContent, putContent, type GitHubConfig } from "./github";
 
 const INDEX_PATH = "index.json";
 const boardPath = (id: string) => `boards/${id}.json`;
@@ -14,6 +19,7 @@ interface RemoteIndex {
   updatedAt: number;
   folders: Folder[];
   boards: { id: string; name: string; folderId: string | null; updatedAt: number }[];
+  deleted?: Tombstone[]; // deletion markers so removals propagate across devices
 }
 
 export interface SyncResult {
@@ -33,7 +39,11 @@ async function fetchIndex(cfg: GitHubConfig): Promise<{ index: RemoteIndex | nul
   }
 }
 
-function buildIndex(boards: Board[], folders: Folder[]): RemoteIndex {
+function buildIndex(
+  boards: Board[],
+  folders: Folder[],
+  deleted: Tombstone[],
+): RemoteIndex {
   return {
     schemaVersion: SV,
     updatedAt: Date.now(),
@@ -44,6 +54,7 @@ function buildIndex(boards: Board[], folders: Folder[]): RemoteIndex {
       folderId: b.folderId,
       updatedAt: b.updatedAt,
     })),
+    deleted,
   };
 }
 
@@ -89,22 +100,44 @@ export async function syncAll(cfg: GitHubConfig): Promise<SyncResult> {
   syncBusy = true;
   try {
     const { index } = await fetchIndex(cfg);
+
+    // 1. reconcile deletions (tombstones). Merge remote+local markers, then
+    //    apply remote deletions locally when nothing newer was edited here.
+    const tomb = await mergeTombstones(index?.deleted ?? []);
+    const tombById = new Map(tomb.map((t) => [t.id, t]));
+    for (const t of tomb) {
+      if (t.kind === "board") {
+        const b = await boardsRepo.getBoard(t.id);
+        if (b && b.updatedAt <= t.deletedAt) await boardsRepo.deleteBoard(t.id);
+      } else {
+        const f = (await foldersRepo.allFolders()).find((x) => x.id === t.id);
+        if (f && f.updatedAt <= t.deletedAt) await foldersRepo.deleteFolder(t.id);
+      }
+    }
+
     const localBoards = await boardsRepo.allBoards();
     const localById = new Map(localBoards.map((b) => [b.id, b]));
 
-    // merge remote folders into local (upsert by id)
+    // 2. merge remote folders into local (skip tombstoned)
     if (index) {
       const localFolders = await foldersRepo.allFolders();
       const lfById = new Map(localFolders.map((f) => [f.id, f]));
       for (const rf of index.folders) {
+        if (tombById.has(rf.id)) continue;
         const lf = lfById.get(rf.id);
         if (!lf || rf.updatedAt > lf.updatedAt) await foldersRepo.putFolder(rf);
       }
     }
 
-    // decide per-board pull/push/conflict
+    // 3. per-board pull/push/conflict/delete
     const remoteMetas = new Map((index?.boards ?? []).map((m) => [m.id, m]));
     for (const [id, meta] of remoteMetas) {
+      if (tombById.has(id)) {
+        // deleted somewhere: remove the remote file instead of pulling it back
+        const f = await getContent(cfg, boardPath(id));
+        if (f) await deleteContent(cfg, boardPath(id), f.sha, `delete board ${id}`);
+        continue;
+      }
       const local = localById.get(id);
       if (!local) {
         await pullBoard(cfg, id); // brand new remote board
@@ -124,16 +157,16 @@ export async function syncAll(cfg: GitHubConfig): Promise<SyncResult> {
       }
     }
 
-    // push local boards that don't exist on the remote yet
+    // 4. push local boards that aren't on the remote yet (and aren't deleted)
     for (const b of localBoards) {
-      if (!remoteMetas.has(b.id)) {
+      if (!remoteMetas.has(b.id) && !tombById.has(b.id)) {
         await pushBoard(cfg, b);
         result.pushed++;
       }
     }
 
-    // rewrite the index from the current local state
-    await writeIndex(cfg);
+    // 5. rewrite the index (carries folders, boards and the deletion markers)
+    await writeIndex(cfg, tomb);
     return result;
   } catch (e) {
     result.error = e instanceof Error ? e.message : String(e);
@@ -143,7 +176,7 @@ export async function syncAll(cfg: GitHubConfig): Promise<SyncResult> {
   }
 }
 
-async function writeIndex(cfg: GitHubConfig): Promise<void> {
+async function writeIndex(cfg: GitHubConfig, deleted: Tombstone[]): Promise<void> {
   const [boards, folders] = await Promise.all([
     boardsRepo.allBoards(),
     foldersRepo.allFolders(),
@@ -152,7 +185,7 @@ async function writeIndex(cfg: GitHubConfig): Promise<void> {
   await putContent(
     cfg,
     INDEX_PATH,
-    JSON.stringify(buildIndex(boards, folders), null, 2),
+    JSON.stringify(buildIndex(boards, folders, deleted), null, 2),
     existing?.sha,
     "index",
   );
@@ -164,7 +197,7 @@ export async function resolveKeepLocal(cfg: GitHubConfig, ids: string[]): Promis
     const b = await boardsRepo.getBoard(id);
     if (b) await pushBoard(cfg, b);
   }
-  await writeIndex(cfg);
+  await writeIndex(cfg, await getTombstones());
 }
 
 /** Conflict resolution: discard local, take the remote versions. */

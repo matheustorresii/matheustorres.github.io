@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Board, StyleDefaults, Tool } from "../types/model";
 import type { Route } from "../router";
-import { goToBoard } from "../router";
+import { goHome, goToBoard } from "../router";
 import { CanvasRoot, type TextEditRequest } from "../canvas/CanvasRoot";
 import { worldToScreen } from "../canvas/viewport";
 import { useUiStore } from "../store/uiStore";
@@ -216,6 +216,18 @@ export function Workspace({ route }: { route: Route }) {
       cancelled = true;
     };
   }, [route]);
+
+  // if the open board gets deleted (here or via sync), drop it so it isn't
+  // re-persisted from memory (which used to "resurrect" deletions).
+  useEffect(() => {
+    if (!library.loaded || !activeBoardId) return;
+    if (!library.boards.some((b) => b.id === activeBoardId)) {
+      boardRef.current = null;
+      setActiveBoardId(null);
+      rootRef.current?.loadBoard([], { scale: 1, offsetX: 0, offsetY: 0 });
+      if (route.kind === "board") goHome();
+    }
+  }, [library.boards, library.loaded, activeBoardId, route]);
 
   // auto-open most recent board when landing on home with boards present
   useEffect(() => {

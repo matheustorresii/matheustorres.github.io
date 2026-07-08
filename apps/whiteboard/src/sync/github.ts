@@ -130,3 +130,21 @@ export async function putContent(
   const data = (await res.json()) as { content: { sha: string } };
   return { sha: data.content.sha };
 }
+
+/** Delete a file (one commit). No-op if it's already gone. */
+export async function deleteContent(
+  cfg: GitHubConfig,
+  path: string,
+  sha: string,
+  message: string,
+): Promise<void> {
+  const url = `${API}/repos/${cfg.repo}/contents/${encodeURIComponent(path).replace(/%2F/g, "/")}`;
+  const res = await fetch(url, {
+    method: "DELETE",
+    cache: "no-store",
+    headers: { ...headers(cfg.pat), "Content-Type": "application/json" },
+    body: JSON.stringify({ message, sha, branch: cfg.branch }),
+  });
+  if (res.status === 404) return; // already deleted
+  if (!res.ok) throw new GitHubError(res.status, friendly(res.status, `DELETE ${path}`));
+}

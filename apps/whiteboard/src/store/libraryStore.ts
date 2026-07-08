@@ -4,6 +4,7 @@ import { DEFAULT_STYLE, SCHEMA_VERSION } from "../types/model";
 import { newId } from "../lib/id";
 import * as boardsRepo from "../persistence/boardsRepo";
 import * as foldersRepo from "../persistence/foldersRepo";
+import { addTombstone } from "../persistence/tombstones";
 
 interface LibraryState {
   folders: Folder[];
@@ -108,6 +109,7 @@ export const useLibraryStore = create<LibraryState>((set, get) => ({
 
   removeBoard: async (id) => {
     await boardsRepo.deleteBoard(id);
+    await addTombstone(id, "board");
     await get().refresh();
   },
 
@@ -170,6 +172,7 @@ export const useLibraryStore = create<LibraryState>((set, get) => ({
       }
     }
     await foldersRepo.deleteFolder(id);
+    await addTombstone(id, "folder");
     await get().refresh();
   },
 }));
