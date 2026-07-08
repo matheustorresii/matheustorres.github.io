@@ -1,0 +1,294 @@
+import getStroke from "perfect-freehand";
+import type {
+  ArrowElement,
+  Element,
+  FreehandElement,
+  IconElement,
+  ImageElement,
+  LineElement,
+  TextElement,
+} from "../types/model";
+import { getImage } from "./imageCache";
+import { drawIconArt } from "./icons";
+
+// All draw functions receive a context already transformed to WORLD space
+// (ctx.setTransform applied by the Renderer). strokeWidth is in world units.
+
+function applyStroke(ctx: CanvasRenderingContext2D, el: Element): void {
+  ctx.globalAlpha = el.opacity;
+  ctx.strokeStyle = el.strokeColor;
+  ctx.lineWidth = el.strokeWidth;
+  ctx.lineJoin = "round";
+  ctx.lineCap = "round";
+}
+
+function applyFill(ctx: CanvasRenderingContext2D, el: Element): boolean {
+  if (el.fillColor && el.fillColor !== "transparent") {
+    ctx.fillStyle = el.fillColor;
+    return true;
+  }
+  return false;
+}
+
+export function drawRectangle(ctx: CanvasRenderingContext2D, el: Element): void {
+  applyStroke(ctx, el);
+  ctx.beginPath();
+  ctx.rect(el.x, el.y, el.w, el.h);
+  if (applyFill(ctx, el)) ctx.fill();
+  ctx.stroke();
+}
+
+export function drawEllipse(ctx: CanvasRenderingContext2D, el: Element): void {
+  applyStroke(ctx, el);
+  ctx.beginPath();
+  ctx.ellipse(
+    el.x + el.w / 2,
+    el.y + el.h / 2,
+    Math.abs(el.w / 2),
+    Math.abs(el.h / 2),
+    0,
+    0,
+    Math.PI * 2,
+  );
+  if (applyFill(ctx, el)) ctx.fill();
+  ctx.stroke();
+}
+
+export function drawLine(ctx: CanvasRenderingContext2D, el: LineElement): void {
+  applyStroke(ctx, el);
+  ctx.beginPath();
+  const [a, b] = [el.points[0], el.points[el.points.length - 1]];
+  ctx.moveTo(el.x + a.x, el.y + a.y);
+  ctx.lineTo(el.x + b.x, el.y + b.y);
+  ctx.stroke();
+}
+
+export function drawArrow(ctx: CanvasRenderingContext2D, el: ArrowElement): void {
+  applyStroke(ctx, el);
+  const a = { x: el.x + el.points[0].x, y: el.y + el.points[0].y };
+  const b = {
+    x: el.x + el.points[el.points.length - 1].x,
+    y: el.y + el.points[el.points.length - 1].y,
+  };
+  ctx.beginPath();
+  ctx.moveTo(a.x, a.y);
+  ctx.lineTo(b.x, b.y);
+  ctx.stroke();
+
+  // arrowhead
+  const angle = Math.atan2(b.y - a.y, b.x - a.x);
+  const size = Math.max(10, el.strokeWidth * 4);
+  ctx.beginPath();
+  ctx.moveTo(b.x, b.y);
+  ctx.lineTo(
+    b.x - size * Math.cos(angle - Math.PI / 6),
+    b.y - size * Math.sin(angle - Math.PI / 6),
+  );
+  ctx.moveTo(b.x, b.y);
+  ctx.lineTo(
+    b.x - size * Math.cos(angle + Math.PI / 6),
+    b.y - size * Math.sin(angle + Math.PI / 6),
+  );
+  ctx.stroke();
+
+  if (el.label) {
+    const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+    const fs = 14;
+    ctx.font = `${fs}px Inter, sans-serif`;
+    ctx.textBaseline = "middle";
+    ctx.textAlign = "center";
+    const tw = ctx.measureText(el.label).width;
+    const padX = 5;
+    const padY = 3;
+    ctx.fillStyle = "#0f120b"; // canvas bg so the line doesn't cross the text
+    ctx.beginPath();
+    const bw = tw + padX * 2;
+    const bh = fs + padY * 2;
+    if (ctx.roundRect) ctx.roundRect(mid.x - bw / 2, mid.y - bh / 2, bw, bh, 4);
+    else ctx.rect(mid.x - bw / 2, mid.y - bh / 2, bw, bh);
+    ctx.fill();
+    ctx.fillStyle = el.strokeColor;
+    ctx.fillText(el.label, mid.x, mid.y);
+    ctx.textAlign = "left";
+  }
+}
+
+export function drawFreehand(
+  ctx: CanvasRenderingContext2D,
+  el: FreehandElement,
+): void {
+  ctx.globalAlpha = el.opacity;
+  ctx.fillStyle = el.strokeColor;
+  const input = el.points.map((p, i) => [
+    el.x + p.x,
+    el.y + p.y,
+    el.pressures?.[i] ?? 0.5,
+  ]);
+  const outline = getStroke(input, {
+    size: el.strokeWidth * 3.2,
+    thinning: 0.6,
+    smoothing: 0.5,
+    streamline: 0.5,
+  });
+  if (outline.length < 2) return;
+  ctx.beginPath();
+  ctx.moveTo(outline[0][0], outline[0][1]);
+  for (let i = 1; i < outline.length; i++) {
+    ctx.lineTo(outline[i][0], outline[i][1]);
+  }
+  ctx.closePath();
+  ctx.fill();
+}
+
+export const CODE_PAD = 10; // world-unit padding inside a code block
+
+function textFont(el: TextElement): string {
+  return el.mono
+    ? `${el.fontSize}px ui-monospace, monospace`
+    : `${el.fontSize}px ${el.fontFamily}, sans-serif`;
+}
+
+/**
+ * Lay out a text element into visual lines. When `autoWidth === false`, words
+ * wrap to fit `el.w` (minus padding); otherwise only manual newlines break
+ * lines. Returns the visual lines plus the element's world-space w/h so the
+ * AABB matches what is drawn (including code-block padding).
+ */
+export function layoutText(
+  ctx: CanvasRenderingContext2D,
+  el: TextElement,
+): { lines: string[]; w: number; h: number } {
+  ctx.font = textFont(el);
+  const pad = el.mono ? CODE_PAD : 0;
+  const lineHeight = el.fontSize * 1.2;
+  const paras = el.text.split("\n");
+  let lines: string[];
+  let contentW: number;
+
+  if (el.autoWidth === false) {
+    const maxW = Math.max(el.w - pad * 2, el.fontSize);
+    lines = [];
+    for (const para of paras) {
+      const words = para.split(" ");
+      let line = "";
+      for (const word of words) {
+        const test = line ? line + " " + word : word;
+        if (ctx.measureText(test).width > maxW && line) {
+          lines.push(line);
+          line = word;
+        } else {
+          line = test;
+        }
+      }
+      lines.push(line);
+    }
+    contentW = maxW;
+  } else {
+    lines = paras;
+    contentW = Math.max(4, ...paras.map((l) => ctx.measureText(l || " ").width));
+  }
+
+  const w = el.autoWidth === false ? el.w : contentW + pad * 2;
+  const h = Math.max(lines.length, 1) * lineHeight + pad * 2;
+  return { lines, w, h };
+}
+
+export function drawText(ctx: CanvasRenderingContext2D, el: TextElement): void {
+  ctx.globalAlpha = el.opacity;
+  const pad = el.mono ? CODE_PAD : 0;
+  const { lines } = layoutText(ctx, el);
+
+  if (el.mono) {
+    ctx.fillStyle = "#12140d";
+    ctx.strokeStyle = "rgba(172, 213, 44, 0.35)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(el.x, el.y, el.w, el.h, 6);
+    else ctx.rect(el.x, el.y, el.w, el.h);
+    ctx.fill();
+    ctx.stroke();
+  }
+
+  ctx.fillStyle = el.strokeColor;
+  ctx.textBaseline = "top";
+  ctx.font = textFont(el);
+  const lineHeight = el.fontSize * 1.2;
+  lines.forEach((line, i) => {
+    ctx.fillText(line, el.x + pad, el.y + pad + i * lineHeight);
+  });
+}
+
+/** Element-level measure used on commit/resize. */
+export function measureTextEl(
+  ctx: CanvasRenderingContext2D,
+  el: TextElement,
+): { w: number; h: number } {
+  const { w, h } = layoutText(ctx, el);
+  return { w, h };
+}
+
+export function drawIcon(ctx: CanvasRenderingContext2D, el: IconElement): void {
+  drawIconArt(ctx, el.iconId, el.x, el.y, el.w, el.h, el.strokeColor, el.opacity);
+  if (el.label) {
+    ctx.globalAlpha = el.opacity;
+    ctx.fillStyle = el.strokeColor;
+    ctx.textBaseline = "top";
+    ctx.textAlign = "center";
+    ctx.font = `12px Inter, sans-serif`;
+    ctx.fillText(el.label, el.x + el.w / 2, el.y + el.h + 4);
+    ctx.textAlign = "left";
+  }
+}
+
+export function drawImage(ctx: CanvasRenderingContext2D, el: ImageElement): void {
+  ctx.globalAlpha = el.opacity;
+  const img = getImage(el.src);
+  if (img) {
+    ctx.drawImage(img, el.x, el.y, el.w, el.h);
+  } else {
+    // placeholder while decoding
+    ctx.fillStyle = "#1c2015";
+    ctx.strokeStyle = "rgba(172, 213, 44, 0.3)";
+    ctx.lineWidth = 1;
+    ctx.fillRect(el.x, el.y, el.w, el.h);
+    ctx.strokeRect(el.x, el.y, el.w, el.h);
+  }
+}
+
+export function drawElement(ctx: CanvasRenderingContext2D, el: Element): void {
+  ctx.save();
+  if (el.rotation) {
+    const cx = el.x + el.w / 2;
+    const cy = el.y + el.h / 2;
+    ctx.translate(cx, cy);
+    ctx.rotate(el.rotation);
+    ctx.translate(-cx, -cy);
+  }
+  switch (el.type) {
+    case "rectangle":
+      drawRectangle(ctx, el);
+      break;
+    case "ellipse":
+      drawEllipse(ctx, el);
+      break;
+    case "line":
+      drawLine(ctx, el);
+      break;
+    case "arrow":
+      drawArrow(ctx, el);
+      break;
+    case "freehand":
+      drawFreehand(ctx, el);
+      break;
+    case "text":
+      drawText(ctx, el);
+      break;
+    case "image":
+      drawImage(ctx, el);
+      break;
+    case "icon":
+      drawIcon(ctx, el);
+      break;
+  }
+  ctx.restore();
+}

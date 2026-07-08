@@ -1,0 +1,41 @@
+:root {
+  /* brand */
+  --accent: #acd52c;
+  --accent-hover: #bde23a;
+  --accent-press: #95bb1f;
+  --accent-ink: #0d0f0a;
+
+  /* surfaces (dark, default) */
+  --bg: #0d0f0a;
+  --bg-canvas: #0f120b;
+  --panel: #15180f;
+  --panel-2: #1c2015;
+  --line: #2a2f1e;
+  --line-strong: #3b4327;
+
+  /* text */
+  --text: #e8ecd9;
+  --muted: #9aa583;
+
+  /* semantic */
+  --danger: #ff5c5c;
+  --warning: #f0b429;
+  --selection: #acd52c;
+  --grid: #1a1e12;
+
+  /* type */
+  --font-ui: "Inter", system-ui, sans-serif;
+  --font-display: "Space Grotesk", "Inter", sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* shape & space */
+  --radius: 8px;
+  --radius-sm: 5px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  --ring: 0 0 0 2px var(--accent);
+}

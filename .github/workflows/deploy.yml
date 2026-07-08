@@ -29,33 +29,18 @@ jobs:
 
       - run: npm ci
 
-      # Base path differs by host:
-      #   - custom domain (apps/web/public/CNAME present) → served at root → "/"
-      #   - default github.io project site → served at "/<repo>/"
-      - name: Compute base path
-        id: base
-        run: |
-          if [ -f apps/web/public/CNAME ]; then
-            echo "base=/" >> "$GITHUB_OUTPUT"
-          else
-            echo "base=/${{ github.event.repository.name }}/" >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Build
         run: npm run build
-        env:
-          VITE_BASE: ${{ steps.base.outputs.base }}
 
-      - name: SPA fallback + slim data + disable Jekyll
+      - name: SPA fallback + disable Jekyll
         run: |
-          cd apps/web/dist
-          cp index.html 404.html          # SPA fallback: deep links survive reloads
-          rm -rf data/cache data/ingest_status.json  # drop ~4.7MB scraper cache
-          touch .nojekyll                 # serve files/dirs starting with "_"
+          cd apps/whiteboard/dist
+          cp index.html 404.html   # deep links (#/b/…, #/s/…) survive a hard reload
+          touch .nojekyll          # serve files/dirs starting with "_"
 
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: apps/web/dist
+          path: apps/whiteboard/dist
 
   deploy:
     needs: build
