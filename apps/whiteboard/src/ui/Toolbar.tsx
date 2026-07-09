@@ -48,6 +48,11 @@ const ICONS: Record<string, JSX.Element> = {
       <rect x="4" y="6" width="16" height="12" rx="2" />
     </svg>
   ),
+  diamond: (
+    <svg {...S}>
+      <path d="M12 3l9 9-9 9-9-9z" />
+    </svg>
+  ),
   ellipse: (
     <svg {...S}>
       <ellipse cx="12" cy="12" rx="8" ry="6" />
@@ -79,11 +84,12 @@ const ICONS: Record<string, JSX.Element> = {
 const TOOLS: { id: Tool; title: string; num: number }[] = [
   { id: "select", title: "Selecionar", num: 1 },
   { id: "rectangle", title: "Retângulo", num: 2 },
-  { id: "ellipse", title: "Elipse", num: 3 },
-  { id: "line", title: "Linha", num: 4 },
-  { id: "arrow", title: "Seta", num: 5 },
-  { id: "freehand", title: "Desenho livre", num: 6 },
-  { id: "text", title: "Texto", num: 7 },
+  { id: "diamond", title: "Losango", num: 3 },
+  { id: "ellipse", title: "Elipse", num: 4 },
+  { id: "line", title: "Linha", num: 5 },
+  { id: "arrow", title: "Seta", num: 6 },
+  { id: "freehand", title: "Desenho livre", num: 7 },
+  { id: "text", title: "Texto", num: 8 },
 ];
 
 export function Toolbar({

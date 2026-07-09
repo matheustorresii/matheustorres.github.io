@@ -24,8 +24,12 @@ export function StylePanel({
   // text mode = a text element is selected, or the text tool is active (creating)
   const isText = sel ? sel.type === "text" : tool === "text";
   const isImage = sel?.type === "image";
+  const isCorner = sel
+    ? sel.type === "rectangle" || sel.type === "diamond"
+    : tool === "rectangle" || tool === "diamond";
   const curFontSize = sel?.type === "text" ? sel.fontSize : style.fontSize;
   const curMono = sel?.type === "text" ? sel.mono : style.mono;
+  const curRounded = isCorner && sel ? sel.rounded : style.rounded;
 
   return (
     <div className={`style-panel ${open ? "is-open" : ""}`}>
@@ -79,6 +83,28 @@ export function StylePanel({
             value={cur.strokeWidth}
             onChange={(e) => onStyle({ strokeWidth: Number(e.target.value) })}
           />
+        </div>
+      )}
+
+      {isCorner && (
+        <div className="field">
+          <label>Cantos</label>
+          <div className="row">
+            <button
+              className={`btn ${curRounded ? "btn-primary" : ""}`}
+              style={{ flex: 1 }}
+              onClick={() => onStyle({ rounded: true })}
+            >
+              Arredondado
+            </button>
+            <button
+              className={`btn ${!curRounded ? "btn-primary" : ""}`}
+              style={{ flex: 1 }}
+              onClick={() => onStyle({ rounded: false })}
+            >
+              Reto
+            </button>
+          </div>
         </div>
       )}
 

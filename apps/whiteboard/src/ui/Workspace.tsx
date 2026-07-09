@@ -25,6 +25,7 @@ export interface SelInfo {
   opacity: number;
   fontSize: number;
   mono: boolean;
+  rounded: boolean;
 }
 
 interface UiMirror {
@@ -165,6 +166,7 @@ export function Workspace({ route }: { route: Route }) {
             opacity: el.opacity,
             fontSize: "fontSize" in el ? el.fontSize : style.fontSize,
             mono: el.type === "text" ? !!el.mono : false,
+            rounded: !!el.rounded,
           };
         }
       }

@@ -2,6 +2,7 @@
 
 export type ElementType =
   | "rectangle"
+  | "diamond"
   | "ellipse"
   | "line"
   | "arrow"
@@ -24,12 +25,16 @@ export interface BaseElement {
   opacity: number; // 0..1
   zIndex: number;
   seed: number; // reserved for roughjs
+  rounded?: boolean; // rounded corners (rectangle & diamond)
   createdAt: number;
   updatedAt: number;
 }
 
 export interface RectangleElement extends BaseElement {
   type: "rectangle";
+}
+export interface DiamondElement extends BaseElement {
+  type: "diamond";
 }
 export interface EllipseElement extends BaseElement {
   type: "ellipse";
@@ -92,6 +97,7 @@ export interface IconElement extends BaseElement {
 
 export type Element =
   | RectangleElement
+  | DiamondElement
   | EllipseElement
   | LineElement
   | ArrowElement
@@ -107,6 +113,7 @@ export interface StyleDefaults {
   opacity: number;
   fontSize: number;
   mono: boolean; // default for new text elements (code-block style)
+  rounded: boolean; // default rounded corners for new rectangles/diamonds
 }
 
 export interface Viewport {
@@ -168,11 +175,13 @@ export const DEFAULT_STYLE: StyleDefaults = {
   opacity: 1,
   fontSize: 20,
   mono: false,
+  rounded: true,
 };
 
 export type Tool =
   | "select"
   | "rectangle"
+  | "diamond"
   | "ellipse"
   | "line"
   | "arrow"

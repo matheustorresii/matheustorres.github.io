@@ -33,7 +33,52 @@ function applyFill(ctx: CanvasRenderingContext2D, el: Element): boolean {
 export function drawRectangle(ctx: CanvasRenderingContext2D, el: Element): void {
   applyStroke(ctx, el);
   ctx.beginPath();
-  ctx.rect(el.x, el.y, el.w, el.h);
+  if (el.rounded && ctx.roundRect) {
+    const r = Math.min(16, Math.abs(el.w) * 0.2, Math.abs(el.h) * 0.2);
+    ctx.roundRect(el.x, el.y, el.w, el.h, r);
+  } else {
+    ctx.rect(el.x, el.y, el.w, el.h);
+  }
+  if (applyFill(ctx, el)) ctx.fill();
+  ctx.stroke();
+}
+
+/** Trace a convex polygon with rounded corners of the given radius. */
+function roundedPolyPath(
+  ctx: CanvasRenderingContext2D,
+  pts: { x: number; y: number }[],
+  radius: number,
+): void {
+  const n = pts.length;
+  const last = pts[n - 1];
+  ctx.moveTo((last.x + pts[0].x) / 2, (last.y + pts[0].y) / 2);
+  for (let i = 0; i < n; i++) {
+    const cur = pts[i];
+    const next = pts[(i + 1) % n];
+    ctx.arcTo(cur.x, cur.y, (cur.x + next.x) / 2, (cur.y + next.y) / 2, radius);
+  }
+  ctx.closePath();
+}
+
+export function drawDiamond(ctx: CanvasRenderingContext2D, el: Element): void {
+  applyStroke(ctx, el);
+  const cx = el.x + el.w / 2;
+  const cy = el.y + el.h / 2;
+  const pts = [
+    { x: cx, y: el.y }, // top
+    { x: el.x + el.w, y: cy }, // right
+    { x: cx, y: el.y + el.h }, // bottom
+    { x: el.x, y: cy }, // left
+  ];
+  ctx.beginPath();
+  if (el.rounded) {
+    const edge = Math.hypot(el.w / 2, el.h / 2);
+    roundedPolyPath(ctx, pts, Math.min(14, edge * 0.35));
+  } else {
+    ctx.moveTo(pts[0].x, pts[0].y);
+    for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+    ctx.closePath();
+  }
   if (applyFill(ctx, el)) ctx.fill();
   ctx.stroke();
 }
@@ -267,6 +312,9 @@ export function drawElement(ctx: CanvasRenderingContext2D, el: Element): void {
   switch (el.type) {
     case "rectangle":
       drawRectangle(ctx, el);
+      break;
+    case "diamond":
+      drawDiamond(ctx, el);
       break;
     case "ellipse":
       drawEllipse(ctx, el);

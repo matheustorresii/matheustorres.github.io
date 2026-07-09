@@ -44,6 +44,14 @@ function hitOne(el: Element, p: Pt, tol: number): boolean {
       const dy = (p.y - cy) / ry;
       return dx * dx + dy * dy <= 1;
     }
+    case "diamond": {
+      const cx = el.x + el.w / 2;
+      const cy = el.y + el.h / 2;
+      const rx = Math.abs(el.w / 2) + tol;
+      const ry = Math.abs(el.h / 2) + tol;
+      if (rx === 0 || ry === 0) return false;
+      return Math.abs(p.x - cx) / rx + Math.abs(p.y - cy) / ry <= 1;
+    }
     case "line":
     case "arrow": {
       const a = { x: el.x + el.points[0].x, y: el.y + el.points[0].y };

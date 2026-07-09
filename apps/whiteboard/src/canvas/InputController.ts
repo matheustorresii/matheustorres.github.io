@@ -764,9 +764,10 @@ export class InputController {
       createdAt: prev?.createdAt ?? Date.now(),
       updatedAt: Date.now(),
     };
-    if (tool === "rectangle" || tool === "ellipse") {
+    if (tool === "rectangle" || tool === "ellipse" || tool === "diamond") {
       const b = normalizeBox(start.x, start.y, end.x, end.y);
-      return { ...base, type: tool, x: b.x, y: b.y, w: b.w, h: b.h } as Element;
+      const rounded = tool !== "ellipse" ? this.root.style.rounded : undefined;
+      return { ...base, type: tool, x: b.x, y: b.y, w: b.w, h: b.h, rounded } as Element;
     }
     if (tool === "line" || tool === "arrow") {
       const b = normalizeBox(start.x, start.y, end.x, end.y);
@@ -976,6 +977,12 @@ export class InputController {
         after.w = size.w;
         after.h = size.h;
       }
+      if (
+        patch.rounded !== undefined &&
+        (after.type === "rectangle" || after.type === "diamond")
+      ) {
+        after.rounded = patch.rounded;
+      }
       after.updatedAt = Date.now();
       changes.push({ before, after });
     }
@@ -1068,20 +1075,21 @@ export class InputController {
       // letters
       v: "select",
       r: "rectangle",
+      d: "diamond",
       o: "ellipse",
       l: "line",
       a: "arrow",
-      d: "freehand",
       p: "freehand",
       t: "text",
       // numbers (Excalidraw-style), matching the toolbar order
       "1": "select",
       "2": "rectangle",
-      "3": "ellipse",
-      "4": "line",
-      "5": "arrow",
-      "6": "freehand",
-      "7": "text",
+      "3": "diamond",
+      "4": "ellipse",
+      "5": "line",
+      "6": "arrow",
+      "7": "freehand",
+      "8": "text",
     };
     const tool = map[e.key.toLowerCase()];
     if (tool) this.root.setTool(tool as never);
