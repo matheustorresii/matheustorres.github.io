@@ -32,6 +32,7 @@ interface UiMirror {
   canUndo: boolean;
   canRedo: boolean;
   sel: SelInfo | null;
+  hasSelection: boolean;
 }
 
 export function Workspace({ route }: { route: Route }) {
@@ -47,6 +48,7 @@ export function Workspace({ route }: { route: Route }) {
     canUndo: false,
     canRedo: false,
     sel: null,
+    hasSelection: false,
   });
   const [activeBoardId, setActiveBoardId] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -170,6 +172,7 @@ export function Workspace({ route }: { route: Route }) {
         canUndo: root.history.canUndo(),
         canRedo: root.history.canRedo(),
         sel,
+        hasSelection: sc.selectedIds.size > 0,
       });
     };
     root.onChange = () => {
@@ -352,6 +355,15 @@ export function Workspace({ route }: { route: Route }) {
                 +
               </button>
             </div>
+            {ui.hasSelection && (
+              <button
+                className="delete-fab touch-only"
+                title="Excluir seleção"
+                onClick={() => rootRef.current?.deleteSelection()}
+              >
+                🗑
+              </button>
+            )}
           </>
         )}
 

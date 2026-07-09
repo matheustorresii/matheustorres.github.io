@@ -171,6 +171,11 @@ export class CanvasRoot {
     this.input.setSelectionMono(on);
   }
 
+  /** Delete the current selection (used by the mobile delete button). */
+  deleteSelection(): void {
+    this.input.deleteSelection();
+  }
+
   destroy(): void {
     cancelAnimationFrame(this.raf);
     this.ro.disconnect();

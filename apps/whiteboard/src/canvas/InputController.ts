@@ -7,6 +7,7 @@ import type {
   LineElement,
   TextElement,
   StyleDefaults,
+  Viewport,
 } from "../types/model";
 import { newId } from "../lib/id";
 import type { CanvasRoot, TextEditRequest } from "./CanvasRoot";
@@ -45,7 +46,8 @@ type State =
   | "dragging"
   | "resizing"
   | "rotating"
-  | "marquee";
+  | "marquee"
+  | "gesture"; // two-finger pinch-zoom + pan (touch)
 const PICK_TOL = 6; // screen px, converted to world by /scale
 const HANDLE_HIT = 10; // screen px
 const ROT_OFFSET = 22; // must match Renderer's ROTATE_OFFSET_SCREEN
@@ -89,6 +91,10 @@ export class InputController {
   private drawStart: Pt | null = null;
   private editingText = false;
   private clipboard: Element[] = []; // in-app copy/paste buffer
+  // touch / multi-touch
+  private pointers = new Map<number, Pt>(); // active pointers (screen coords)
+  private pinch: { startDist: number; startMid: Pt; startVp: Viewport } | null = null;
+  private touch = false; // last input came from touch → use fatter hit targets
 
   constructor(root: CanvasRoot) {
     this.root = root;
@@ -96,6 +102,7 @@ export class InputController {
     c.addEventListener("pointerdown", this.onPointerDown);
     window.addEventListener("pointermove", this.onPointerMove);
     window.addEventListener("pointerup", this.onPointerUp);
+    window.addEventListener("pointercancel", this.onPointerUp);
     c.addEventListener("wheel", this.onWheel, { passive: false });
     window.addEventListener("keydown", this.onKeyDown);
     window.addEventListener("keyup", this.onKeyUp);
@@ -110,6 +117,7 @@ export class InputController {
     c.removeEventListener("pointerdown", this.onPointerDown);
     window.removeEventListener("pointermove", this.onPointerMove);
     window.removeEventListener("pointerup", this.onPointerUp);
+    window.removeEventListener("pointercancel", this.onPointerUp);
     c.removeEventListener("wheel", this.onWheel);
     window.removeEventListener("keydown", this.onKeyDown);
     window.removeEventListener("keyup", this.onKeyUp);
@@ -240,18 +248,37 @@ export class InputController {
         y: wp.y * scale + scene.viewport.offsetY,
       };
     };
+    const hit = this.touch ? HANDLE_HIT + 12 : HANDLE_HIT; // fatter for fingers
     for (const h of cornerHandles(padded)) {
       const s = toScreen({ x: h.x, y: h.y });
-      if (Math.abs(s.x - screen.x) <= HANDLE_HIT && Math.abs(s.y - screen.y) <= HANDLE_HIT)
+      if (Math.abs(s.x - screen.x) <= hit && Math.abs(s.y - screen.y) <= hit)
         return h.id;
     }
     const rot = toScreen({ x: center.x, y: padded.y - ROT_OFFSET / scale });
-    if (Math.hypot(rot.x - screen.x, rot.y - screen.y) <= HANDLE_HIT + 2) return "rotate";
+    if (Math.hypot(rot.x - screen.x, rot.y - screen.y) <= hit + 2) return "rotate";
     return null;
   }
 
   // ---- pointer down ----
   private onPointerDown = (e: PointerEvent): void => {
+    this.touch = e.pointerType === "touch";
+    this.pointers.set(e.pointerId, this.screenPt(e));
+    // second finger down → enter two-finger pinch/pan, aborting any single-
+    // pointer op in progress (mouse never reaches 2 pointers, so desktop is
+    // unaffected).
+    if (this.pointers.size === 2) {
+      this.abortSingle();
+      const [a, b] = [...this.pointers.values()];
+      this.pinch = {
+        startDist: Math.hypot(b.x - a.x, b.y - a.y) || 1,
+        startMid: { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 },
+        startVp: { ...this.root.scene.viewport },
+      };
+      this.state = "gesture";
+      return;
+    }
+    if (this.pointers.size > 2) return;
+
     // an open text editor commits itself on blur; swallow this click so it
     // doesn't immediately place a second text box / start another gesture.
     if (this.editingText) return;
@@ -289,7 +316,7 @@ export class InputController {
         this.state = "resizing";
         return;
       }
-      const hit = hitTest(scene.all(), world, PICK_TOL / this.scale);
+      const hit = hitTest(scene.all(), world, (this.touch ? 14 : PICK_TOL) / this.scale);
       if (hit) {
         if (additive) {
           scene.toggleSelection(hit.id); // Cmd/Shift+click add/remove
@@ -365,8 +392,30 @@ export class InputController {
     this.state = "dragging";
   }
 
+  private applyPinch(): void {
+    if (!this.pinch || this.pointers.size < 2) return;
+    const [a, b] = [...this.pointers.values()];
+    const dist = Math.hypot(b.x - a.x, b.y - a.y) || 1;
+    const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+    const { startDist, startMid, startVp } = this.pinch;
+    const worldAtStartMid = screenToWorld(startVp, startMid);
+    const newScale = clamp(startVp.scale * (dist / startDist), 0.05, 64);
+    // keep the content under the initial finger-center under the new center
+    this.root.scene.setViewport({
+      scale: newScale,
+      offsetX: mid.x - worldAtStartMid.x * newScale,
+      offsetY: mid.y - worldAtStartMid.y * newScale,
+    });
+    this.root.onUiSync?.();
+  }
+
   // ---- pointer move ----
   private onPointerMove = (e: PointerEvent): void => {
+    if (this.pointers.has(e.pointerId)) this.pointers.set(e.pointerId, this.screenPt(e));
+    if (this.state === "gesture") {
+      this.applyPinch();
+      return;
+    }
     // hover highlight of a bindable shape while the arrow tool is armed
     if (this.state === "idle") {
       if (this.root.tool === "arrow" && !this.root.readonly) {
@@ -568,7 +617,16 @@ export class InputController {
   }
 
   // ---- pointer up ----
-  private onPointerUp = (): void => {
+  private onPointerUp = (e: PointerEvent): void => {
+    this.pointers.delete(e.pointerId);
+    if (this.state === "gesture") {
+      // leaving the pinch: don't resume a single-pointer op until a fresh touch
+      if (this.pointers.size < 2) {
+        this.pinch = null;
+        this.state = "idle";
+      }
+      return;
+    }
     switch (this.state) {
       case "drawing":
         this.commitDraw();
@@ -590,6 +648,19 @@ export class InputController {
     this.panLast = null;
     this.drawStart = null;
   };
+
+  /** Discard an in-progress single-pointer op without committing (2nd finger landed). */
+  private abortSingle(): void {
+    this.root.preview = null;
+    this.drag = null;
+    this.resizeS = null;
+    this.rotateS = null;
+    this.marqueeS = null;
+    this.root.scene.marqueeRect = null;
+    this.root.scene.setBindHighlight(null);
+    this.drawStart = null;
+    this.root.scene.markDirty();
+  }
 
   private commitRotate(): void {
     if (!this.rotateS) return;
@@ -1020,7 +1091,7 @@ export class InputController {
     if (e.key === " ") this.spaceDown = false;
   };
 
-  private deleteSelection(): void {
+  deleteSelection(): void {
     const scene = this.root.scene;
     const sel = scene.selectedElements();
     if (sel.length === 0) return;
@@ -1137,7 +1208,7 @@ export class InputController {
   private onDblClick = (e: MouseEvent): void => {
     if (this.root.readonly) return;
     const world = this.worldPt(e);
-    const hit = hitTest(this.root.scene.all(), world, PICK_TOL / this.scale);
+    const hit = hitTest(this.root.scene.all(), world, (this.touch ? 14 : PICK_TOL) / this.scale);
     if (!hit) return;
     if (hit.type === "text") this.openTextEditor(hit.id, world);
     else if (hit.type === "arrow") this.openArrowLabel(hit.id);
