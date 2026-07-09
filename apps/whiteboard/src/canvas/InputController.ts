@@ -25,6 +25,7 @@ import {
   boxesIntersect,
   clamp,
   normalizeBox,
+  pointInBox,
   pointsBounds,
   rotateAround,
   snap,
@@ -297,15 +298,18 @@ export class InputController {
         }
         if (!scene.isSelected(hit.id)) scene.select(hit.id);
         this.beginDrag(world); // drag the whole current selection
-      } else {
-        // empty space: start a marquee (Windows-style drag-select)
-        this.marqueeS = {
-          start: world,
-          additive,
-          base: new Set(scene.selectedIds),
-        };
-        this.state = "marquee";
+        return;
       }
+      // no precise hit, but inside a selected element's box → grab it. Lets you
+      // move a selected line/arrow/freehand from anywhere in its box, not just
+      // by hitting the thin geometry again.
+      if (!additive && this.insideSelection(world)) {
+        this.beginDrag(world);
+        return;
+      }
+      // empty space: start a marquee (Windows-style drag-select)
+      this.marqueeS = { start: world, additive, base: new Set(scene.selectedIds) };
+      this.state = "marquee";
       return;
     }
 
@@ -329,6 +333,20 @@ export class InputController {
   private startPan(e: PointerEvent): void {
     this.state = "panning";
     this.panLast = this.screenPt(e);
+  }
+
+  /** True when world is inside any selected element's (padded, rotation-aware) box. */
+  private insideSelection(world: Pt): boolean {
+    const scene = this.root.scene;
+    for (const id of scene.selectedIds) {
+      const el = scene.get(id);
+      if (!el) continue;
+      const pad = (8 + el.strokeWidth) / this.scale;
+      const b = aabb(el);
+      const p = el.rotation ? rotateAround(world, boxCenter(b), -el.rotation) : world;
+      if (pointInBox(p, b, pad)) return true;
+    }
+    return false;
   }
 
   private beginDrag(world: Pt): void {
