@@ -54,6 +54,7 @@ export function Workspace({ route }: { route: Route }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [syncOpen, setSyncOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+  const [styleOpen, setStyleOpen] = useState(false); // mobile: style panel toggle
 
   const tool = useUiStore((s) => s.tool);
   const style = useUiStore((s) => s.style);
@@ -337,10 +338,18 @@ export function Workspace({ route }: { route: Route }) {
                 rootRef.current?.setIcon(id);
               }}
             />
+            <button
+              className="style-toggle"
+              title="Estilo"
+              onClick={() => setStyleOpen((o) => !o)}
+            >
+              🎨
+            </button>
             <StylePanel
               sel={ui.sel}
               style={style}
               tool={tool}
+              open={styleOpen}
               onStyle={handleStyle}
               onMono={(on) => rootRef.current?.setTextMono(on)}
             />

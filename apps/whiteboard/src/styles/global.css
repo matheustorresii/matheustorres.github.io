@@ -507,6 +507,25 @@ button:focus-visible {
     display: inline-flex;
   }
 }
+/* mobile-only toggle for the style panel (hidden on desktop, where the panel
+   is always visible) */
+.style-toggle {
+  display: none;
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+  width: 40px;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  background: var(--panel);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  font-size: 17px;
+  z-index: 12;
+  box-shadow: var(--shadow);
+}
+
 .delete-fab {
   position: absolute;
   bottom: var(--space-3);
@@ -547,13 +566,22 @@ button:focus-visible {
   .tool-num {
     display: none;
   }
-  /* style panel sits below the toolbar row, compact */
+  /* style panel is collapsed by default on phones; the 🎨 button opens it */
+  .style-toggle {
+    display: inline-flex;
+  }
   .style-panel {
-    width: 170px;
-    top: 116px;
+    display: none;
+    width: 190px;
+    top: 112px;
     right: 8px;
     padding: 10px;
     gap: var(--space-2);
+    max-height: calc(100vh - 180px);
+    overflow-y: auto;
+  }
+  .style-panel.is-open {
+    display: flex;
   }
   .icon-picker {
     grid-template-columns: repeat(4, 1fr);

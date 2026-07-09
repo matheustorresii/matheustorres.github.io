@@ -8,12 +8,14 @@ export function StylePanel({
   sel,
   style,
   tool,
+  open,
   onStyle,
   onMono,
 }: {
   sel: SelInfo | null;
   style: StyleDefaults;
   tool: Tool;
+  open: boolean;
   onStyle: (patch: Partial<StyleDefaults>) => void;
   onMono: (on: boolean) => void;
 }) {
@@ -26,7 +28,7 @@ export function StylePanel({
   const curMono = sel?.type === "text" ? sel.mono : style.mono;
 
   return (
-    <div className="style-panel">
+    <div className={`style-panel ${open ? "is-open" : ""}`}>
       {!isImage && (
         <div className="field">
           <label>Traço</label>
