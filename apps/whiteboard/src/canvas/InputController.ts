@@ -1075,6 +1075,9 @@ export class InputController {
       this.root.scene.select(null);
       return;
     }
+    // tool shortcuts are UNMODIFIED keys only — don't hijack Ctrl+2 (switch
+    // browser tab), Alt+…, etc.
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
     const map: Record<string, string> = {
       // letters
       v: "select",
