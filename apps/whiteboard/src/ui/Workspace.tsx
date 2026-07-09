@@ -26,6 +26,7 @@ export interface SelInfo {
   fontSize: number;
   mono: boolean;
   rounded: boolean;
+  lang: string;
 }
 
 interface UiMirror {
@@ -167,6 +168,7 @@ export function Workspace({ route }: { route: Route }) {
             fontSize: "fontSize" in el ? el.fontSize : style.fontSize,
             mono: el.type === "text" ? !!el.mono : false,
             rounded: !!el.rounded,
+            lang: el.type === "text" ? (el.lang ?? "typescript") : "typescript",
           };
         }
       }
@@ -527,7 +529,7 @@ function TextOverlay({
         fontFamily: mono ? "ui-monospace, monospace" : "Inter, sans-serif",
         padding: pad,
         background:
-          req.targetKind === "arrowLabel" ? "#0f120b" : mono ? "#12140d" : "transparent",
+          req.targetKind === "arrowLabel" ? "#0f120b" : mono ? "#282c34" : "transparent",
         boxSizing: "border-box",
         whiteSpace: req.autoWidth ? "pre" : "pre-wrap",
         overflow: "hidden",

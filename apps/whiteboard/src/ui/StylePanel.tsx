@@ -1,5 +1,6 @@
 import type { StyleDefaults, Tool } from "../types/model";
 import type { SelInfo } from "./Workspace";
+import { CODE_LANGS } from "../canvas/highlight";
 
 const STROKE_COLORS = ["#acd52c", "#e8ecd9", "#ff5c5c", "#4aa3ff", "#f0b429", "#b07cff"];
 const FILL_COLORS = ["transparent", "#2a3316", "#3a2020", "#1f3040", "#3d3410"];
@@ -30,6 +31,7 @@ export function StylePanel({
   const curFontSize = sel?.type === "text" ? sel.fontSize : style.fontSize;
   const curMono = sel?.type === "text" ? sel.mono : style.mono;
   const curRounded = isCorner && sel ? sel.rounded : style.rounded;
+  const curLang = sel?.type === "text" ? sel.lang : style.lang;
 
   return (
     <div className={`style-panel ${open ? "is-open" : ""}`}>
@@ -134,6 +136,19 @@ export function StylePanel({
           >
             {"{ }"} Código {curMono ? "· on" : ""}
           </button>
+        </div>
+      )}
+
+      {isText && curMono && (
+        <div className="field">
+          <label>Linguagem</label>
+          <select value={curLang} onChange={(e) => onStyle({ lang: e.target.value })}>
+            {CODE_LANGS.map((l) => (
+              <option key={l.id} value={l.id}>
+                {l.label}
+              </option>
+            ))}
+          </select>
         </div>
       )}
 

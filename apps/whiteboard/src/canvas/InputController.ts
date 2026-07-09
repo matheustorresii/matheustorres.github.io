@@ -926,6 +926,7 @@ export class InputController {
       fontSize: req.fontSize,
       fontFamily: "Inter",
       mono: req.mono,
+      lang: this.root.style.lang,
       autoWidth: req.autoWidth,
     };
     const size = measureTextEl(this.measureCtx(), el);
@@ -982,6 +983,9 @@ export class InputController {
         (after.type === "rectangle" || after.type === "diamond")
       ) {
         after.rounded = patch.rounded;
+      }
+      if (patch.lang !== undefined && after.type === "text") {
+        (after as TextElement).lang = patch.lang;
       }
       after.updatedAt = Date.now();
       changes.push({ before, after });

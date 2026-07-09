@@ -10,6 +10,7 @@ import type {
 } from "../types/model";
 import { getImage } from "./imageCache";
 import { drawIconArt } from "./icons";
+import { colorFor, tokenizeLines } from "./highlight";
 
 // All draw functions receive a context already transformed to WORLD space
 // (ctx.setTransform applied by the Renderer). strokeWidth is in world units.
@@ -244,8 +245,8 @@ export function drawText(ctx: CanvasRenderingContext2D, el: TextElement): void {
   const { lines } = layoutText(ctx, el);
 
   if (el.mono) {
-    ctx.fillStyle = "#12140d";
-    ctx.strokeStyle = "rgba(172, 213, 44, 0.35)";
+    ctx.fillStyle = "#282c34"; // One Dark editor background
+    ctx.strokeStyle = "#3e4451";
     ctx.lineWidth = 1;
     ctx.beginPath();
     if (ctx.roundRect) ctx.roundRect(el.x, el.y, el.w, el.h, 6);
@@ -254,10 +255,26 @@ export function drawText(ctx: CanvasRenderingContext2D, el: TextElement): void {
     ctx.stroke();
   }
 
-  ctx.fillStyle = el.strokeColor;
   ctx.textBaseline = "top";
   ctx.font = textFont(el);
   const lineHeight = el.fontSize * 1.2;
+
+  if (el.mono) {
+    // real syntax highlighting: draw each token in its theme color
+    const hl = tokenizeLines(el.text, el.lang ?? "typescript");
+    hl.forEach((runs, i) => {
+      let x = el.x + pad;
+      const y = el.y + pad + i * lineHeight;
+      for (const run of runs) {
+        ctx.fillStyle = colorFor(run.type);
+        ctx.fillText(run.text, x, y);
+        x += ctx.measureText(run.text).width;
+      }
+    });
+    return;
+  }
+
+  ctx.fillStyle = el.strokeColor;
   lines.forEach((line, i) => {
     ctx.fillText(line, el.x + pad, el.y + pad + i * lineHeight);
   });

@@ -77,6 +77,7 @@ export interface TextElement extends BaseElement {
   fontSize: number;
   fontFamily: string;
   mono?: boolean; // renders as a monospace "code block" with a panel background
+  lang?: string; // syntax-highlight language for code blocks (when mono)
   // When false, `w` is a fixed wrap width and text reflows to it. When true
   // (default), the box hugs the text and only manual newlines break lines.
   autoWidth?: boolean;
@@ -114,6 +115,7 @@ export interface StyleDefaults {
   fontSize: number;
   mono: boolean; // default for new text elements (code-block style)
   rounded: boolean; // default rounded corners for new rectangles/diamonds
+  lang: string; // default code-block language
 }
 
 export interface Viewport {
@@ -176,6 +178,7 @@ export const DEFAULT_STYLE: StyleDefaults = {
   fontSize: 20,
   mono: false,
   rounded: true,
+  lang: "typescript",
 };
 
 export type Tool =
