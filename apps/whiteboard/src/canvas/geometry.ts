@@ -91,6 +91,41 @@ export function boxCenter(b: Box): Pt {
   return { x: b.x + b.w / 2, y: b.y + b.h / 2 };
 }
 
+/** Absolute endpoints + quadratic control point of a line/arrow (null when straight). */
+export function curveControl(el: {
+  x: number;
+  y: number;
+  points: Pt[];
+  bend?: number;
+}): { a: Pt; b: Pt; c: Pt | null } {
+  const p0 = el.points[0];
+  const p1 = el.points[el.points.length - 1];
+  const a = { x: el.x + p0.x, y: el.y + p0.y };
+  const b = { x: el.x + p1.x, y: el.y + p1.y };
+  const bend = el.bend ?? 0;
+  if (!bend) return { a, b, c: null };
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  const len = Math.hypot(dx, dy) || 1;
+  const px = -dy / len;
+  const py = dx / len; // perpendicular unit
+  return {
+    a,
+    b,
+    c: { x: (a.x + b.x) / 2 + px * bend, y: (a.y + b.y) / 2 + py * bend },
+  };
+}
+
+/** Point on a quadratic bezier (or the segment when c is null) at parameter t. */
+export function curvePointAt(a: Pt, b: Pt, c: Pt | null, t: number): Pt {
+  if (!c) return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t };
+  const u = 1 - t;
+  return {
+    x: u * u * a.x + 2 * u * t * c.x + t * t * b.x,
+    y: u * u * a.y + 2 * u * t * c.y + t * t * b.y,
+  };
+}
+
 /** Rotate point p around center c by angle (radians). */
 export function rotateAround(p: Pt, c: Pt, angle: number): Pt {
   const cos = Math.cos(angle);

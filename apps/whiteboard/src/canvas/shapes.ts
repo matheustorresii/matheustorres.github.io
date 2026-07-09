@@ -11,16 +11,46 @@ import type {
 import { getImage } from "./imageCache";
 import { drawIconArt } from "./icons";
 import { colorFor, tokenizeLines } from "./highlight";
+import { curveControl } from "./geometry";
+import { STROKE_DARK, STROKE_LIGHT } from "../theme";
+
+// The two theme-default stroke colors flip with the theme so default-colored
+// content stays visible after a theme switch; explicit colors are left alone.
+function adapt(color: string): string {
+  const light = document.documentElement.dataset.theme === "light";
+  if (light && color === STROKE_DARK) return STROKE_LIGHT;
+  if (!light && color === STROKE_LIGHT) return STROKE_DARK;
+  return color;
+}
 
 // All draw functions receive a context already transformed to WORLD space
 // (ctx.setTransform applied by the Renderer). strokeWidth is in world units.
 
 function applyStroke(ctx: CanvasRenderingContext2D, el: Element): void {
   ctx.globalAlpha = el.opacity;
-  ctx.strokeStyle = el.strokeColor;
+  ctx.strokeStyle = adapt(el.strokeColor);
   ctx.lineWidth = el.strokeWidth;
   ctx.lineJoin = "round";
   ctx.lineCap = "round";
+}
+
+/** Text label centered inside a shape (rectangle/ellipse/diamond). */
+function drawCenteredLabel(ctx: CanvasRenderingContext2D, el: Element): void {
+  if (!el.label) return;
+  ctx.save();
+  ctx.globalAlpha = el.opacity;
+  ctx.fillStyle = adapt(el.strokeColor);
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  const fs = 16;
+  ctx.font = `${fs}px Inter, sans-serif`;
+  const cx = el.x + el.w / 2;
+  const cy = el.y + el.h / 2;
+  const lines = el.label.split("\n");
+  const lh = fs * 1.25;
+  const startY = cy - ((lines.length - 1) * lh) / 2;
+  lines.forEach((ln, i) => ctx.fillText(ln, cx, startY + i * lh));
+  ctx.restore();
 }
 
 function applyFill(ctx: CanvasRenderingContext2D, el: Element): boolean {
@@ -42,6 +72,7 @@ export function drawRectangle(ctx: CanvasRenderingContext2D, el: Element): void 
   }
   if (applyFill(ctx, el)) ctx.fill();
   ctx.stroke();
+  drawCenteredLabel(ctx, el);
 }
 
 /** Trace a convex polygon with rounded corners of the given radius. */
@@ -82,6 +113,7 @@ export function drawDiamond(ctx: CanvasRenderingContext2D, el: Element): void {
   }
   if (applyFill(ctx, el)) ctx.fill();
   ctx.stroke();
+  drawCenteredLabel(ctx, el);
 }
 
 export function drawEllipse(ctx: CanvasRenderingContext2D, el: Element): void {
@@ -98,31 +130,31 @@ export function drawEllipse(ctx: CanvasRenderingContext2D, el: Element): void {
   );
   if (applyFill(ctx, el)) ctx.fill();
   ctx.stroke();
+  drawCenteredLabel(ctx, el);
 }
 
 export function drawLine(ctx: CanvasRenderingContext2D, el: LineElement): void {
   applyStroke(ctx, el);
+  const { a, b, c } = curveControl(el);
   ctx.beginPath();
-  const [a, b] = [el.points[0], el.points[el.points.length - 1]];
-  ctx.moveTo(el.x + a.x, el.y + a.y);
-  ctx.lineTo(el.x + b.x, el.y + b.y);
+  ctx.moveTo(a.x, a.y);
+  if (c) ctx.quadraticCurveTo(c.x, c.y, b.x, b.y);
+  else ctx.lineTo(b.x, b.y);
   ctx.stroke();
 }
 
 export function drawArrow(ctx: CanvasRenderingContext2D, el: ArrowElement): void {
   applyStroke(ctx, el);
-  const a = { x: el.x + el.points[0].x, y: el.y + el.points[0].y };
-  const b = {
-    x: el.x + el.points[el.points.length - 1].x,
-    y: el.y + el.points[el.points.length - 1].y,
-  };
+  const { a, b, c } = curveControl(el);
   ctx.beginPath();
   ctx.moveTo(a.x, a.y);
-  ctx.lineTo(b.x, b.y);
+  if (c) ctx.quadraticCurveTo(c.x, c.y, b.x, b.y);
+  else ctx.lineTo(b.x, b.y);
   ctx.stroke();
 
-  // arrowhead
-  const angle = Math.atan2(b.y - a.y, b.x - a.x);
+  // arrowhead — angle from the tangent at the end (control point when curved)
+  const from = c ?? a;
+  const angle = Math.atan2(b.y - from.y, b.x - from.x);
   const size = Math.max(10, el.strokeWidth * 4);
   ctx.beginPath();
   ctx.moveTo(b.x, b.y);
@@ -146,14 +178,15 @@ export function drawArrow(ctx: CanvasRenderingContext2D, el: ArrowElement): void
     const tw = ctx.measureText(el.label).width;
     const padX = 5;
     const padY = 3;
-    ctx.fillStyle = "#0f120b"; // canvas bg so the line doesn't cross the text
+    // canvas bg so the line doesn't cross the text
+    ctx.fillStyle = document.documentElement.dataset.theme === "light" ? "#fbfcf6" : "#0f120b";
     ctx.beginPath();
     const bw = tw + padX * 2;
     const bh = fs + padY * 2;
     if (ctx.roundRect) ctx.roundRect(mid.x - bw / 2, mid.y - bh / 2, bw, bh, 4);
     else ctx.rect(mid.x - bw / 2, mid.y - bh / 2, bw, bh);
     ctx.fill();
-    ctx.fillStyle = el.strokeColor;
+    ctx.fillStyle = adapt(el.strokeColor);
     ctx.fillText(el.label, mid.x, mid.y);
     ctx.textAlign = "left";
   }
@@ -164,7 +197,7 @@ export function drawFreehand(
   el: FreehandElement,
 ): void {
   ctx.globalAlpha = el.opacity;
-  ctx.fillStyle = el.strokeColor;
+  ctx.fillStyle = adapt(el.strokeColor);
   const input = el.points.map((p, i) => [
     el.x + p.x,
     el.y + p.y,
@@ -274,7 +307,7 @@ export function drawText(ctx: CanvasRenderingContext2D, el: TextElement): void {
     return;
   }
 
-  ctx.fillStyle = el.strokeColor;
+  ctx.fillStyle = adapt(el.strokeColor);
   lines.forEach((line, i) => {
     ctx.fillText(line, el.x + pad, el.y + pad + i * lineHeight);
   });
@@ -293,7 +326,7 @@ export function drawIcon(ctx: CanvasRenderingContext2D, el: IconElement): void {
   drawIconArt(ctx, el.iconId, el.x, el.y, el.w, el.h, el.strokeColor, el.opacity);
   if (el.label) {
     ctx.globalAlpha = el.opacity;
-    ctx.fillStyle = el.strokeColor;
+    ctx.fillStyle = adapt(el.strokeColor);
     ctx.textBaseline = "top";
     ctx.textAlign = "center";
     ctx.font = `12px Inter, sans-serif`;

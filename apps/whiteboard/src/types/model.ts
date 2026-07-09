@@ -26,6 +26,7 @@ export interface BaseElement {
   zIndex: number;
   seed: number; // reserved for roughjs
   rounded?: boolean; // rounded corners (rectangle & diamond)
+  label?: string; // centered text label (shapes) / midpoint label (arrows)
   createdAt: number;
   updatedAt: number;
 }
@@ -48,6 +49,7 @@ export interface LinePoint {
 export interface LineElement extends BaseElement {
   type: "line";
   points: LinePoint[];
+  bend?: number; // perpendicular curve offset at the midpoint (0 = straight)
 }
 
 export interface Binding {
@@ -62,7 +64,7 @@ export interface ArrowElement extends BaseElement {
   points: LinePoint[];
   boundStart?: Binding;
   boundEnd?: Binding;
-  label?: string; // optional text drawn at the arrow midpoint
+  bend?: number; // perpendicular curve offset at the midpoint (0 = straight)
 }
 
 export interface FreehandElement extends BaseElement {
@@ -93,7 +95,6 @@ export interface ImageElement extends BaseElement {
 export interface IconElement extends BaseElement {
   type: "icon";
   iconId: string; // key into the architecture icon set
-  label?: string; // optional caption under the icon
 }
 
 export type Element =

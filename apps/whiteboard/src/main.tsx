@@ -3,7 +3,9 @@ import "./styles/tokens.css";
 import "./styles/global.css";
 import { App } from "./App";
 import { requestPersistence } from "./persistence/db";
+import { applyTheme, getTheme } from "./theme";
 
+applyTheme(getTheme());
 void requestPersistence();
 
 // Note: no <StrictMode>. It double-mounts effects in dev, which recreates the

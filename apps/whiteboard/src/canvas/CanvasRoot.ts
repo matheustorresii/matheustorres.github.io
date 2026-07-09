@@ -18,7 +18,7 @@ export interface TextEditRequest {
   mono: boolean;
   autoWidth: boolean;
   boxWidth: number; // world-space wrap width when autoWidth is false
-  targetKind?: "text" | "arrowLabel"; // arrowLabel edits an arrow's label, not a text element
+  targetKind?: "text" | "label"; // "label" edits an element's `label`, not a text element
 }
 
 /**

@@ -25,6 +25,8 @@ import {
   boxCenter,
   boxesIntersect,
   clamp,
+  curveControl,
+  curvePointAt,
   normalizeBox,
   pointInBox,
   pointsBounds,
@@ -46,6 +48,7 @@ type State =
   | "dragging"
   | "resizing"
   | "rotating"
+  | "bending" // dragging a line/arrow's curve handle
   | "marquee"
   | "gesture"; // two-finger pinch-zoom + pan (touch)
 const PICK_TOL = 6; // screen px, converted to world by /scale
@@ -87,6 +90,7 @@ export class InputController {
   private drag: DragSession | null = null;
   private resizeS: ResizeSession | null = null;
   private rotateS: RotateSession | null = null;
+  private bendS: { before: Element } | null = null;
   private marqueeS: MarqueeSession | null = null;
   private drawStart: Pt | null = null;
   private editingText = false;
@@ -230,7 +234,7 @@ export class InputController {
     return this.root.scene.viewport.scale;
   }
 
-  private handleAt(screen: Pt): HandleId | "rotate" | null {
+  private handleAt(screen: Pt): HandleId | "rotate" | "bend" | null {
     const scene = this.root.scene;
     const single = scene.singleSelection;
     if (!single) return null; // handles only when exactly one is selected
@@ -249,6 +253,13 @@ export class InputController {
       };
     };
     const hit = this.touch ? HANDLE_HIT + 12 : HANDLE_HIT; // fatter for fingers
+    // bend handle (line/arrow midpoint) takes priority — it sits over the box
+    if (el.type === "line" || el.type === "arrow") {
+      const g = curveControl(el);
+      const mid = curvePointAt(g.a, g.b, g.c, 0.5);
+      const s = toScreen(mid);
+      if (Math.hypot(s.x - screen.x, s.y - screen.y) <= hit + 2) return "bend";
+    }
     for (const h of cornerHandles(padded)) {
       const s = toScreen({ x: h.x, y: h.y });
       if (Math.abs(s.x - screen.x) <= hit && Math.abs(s.y - screen.y) <= hit)
@@ -298,6 +309,12 @@ export class InputController {
       const scene = this.root.scene;
       const additive = e.shiftKey || e.metaKey || e.ctrlKey;
       const handle = this.handleAt(screen);
+      if (handle === "bend") {
+        const el = scene.get(scene.singleSelection!)!;
+        this.bendS = { before: clone(el) };
+        this.state = "bending";
+        return;
+      }
       if (handle === "rotate") {
         const el = scene.get(scene.singleSelection!)!;
         const center = boxCenter(aabb(el));
@@ -470,6 +487,11 @@ export class InputController {
         this.applyRotate(this.worldPt(e), e.shiftKey);
         break;
       }
+      case "bending": {
+        if (!this.bendS) return;
+        this.applyBend(this.worldPt(e));
+        break;
+      }
       case "marquee": {
         if (!this.marqueeS) return;
         this.applyMarquee(this.worldPt(e));
@@ -492,6 +514,34 @@ export class InputController {
       el.rotation = rot;
       this.root.scene.markDirty();
     }
+  }
+
+  private applyBend(world: Pt): void {
+    if (!this.bendS) return;
+    const before = this.bendS.before as LineElement | ArrowElement;
+    const g = curveControl({ ...before, bend: 0 });
+    const mid = { x: (g.a.x + g.b.x) / 2, y: (g.a.y + g.b.y) / 2 };
+    const dx = g.b.x - g.a.x;
+    const dy = g.b.y - g.a.y;
+    const len = Math.hypot(dx, dy) || 1;
+    const bend = ((world.x - mid.x) * -dy + (world.y - mid.y) * dx) / len;
+    const el = this.root.scene.get(before.id) as LineElement | ArrowElement | undefined;
+    if (el) {
+      el.bend = Math.abs(bend) < 4 / this.scale ? 0 : bend; // snap near-straight to straight
+      this.root.scene.markDirty();
+    }
+  }
+
+  private commitBend(): void {
+    if (!this.bendS) return;
+    const before = this.bendS.before;
+    const cur = this.root.scene.get(before.id);
+    this.bendS = null;
+    if (!cur) return;
+    const a = (cur as LineElement).bend ?? 0;
+    const b = (before as LineElement).bend ?? 0;
+    if (a === b) return;
+    this.root.history.execute(this.root.scene, updateElement(before, clone(cur)));
   }
 
   private applyMarquee(world: Pt): void {
@@ -640,6 +690,9 @@ export class InputController {
       case "rotating":
         this.commitRotate();
         break;
+      case "bending":
+        this.commitBend();
+        break;
       case "marquee":
         this.commitMarquee();
         break;
@@ -655,6 +708,7 @@ export class InputController {
     this.drag = null;
     this.resizeS = null;
     this.rotateS = null;
+    this.bendS = null;
     this.marqueeS = null;
     this.root.scene.marqueeRect = null;
     this.root.scene.setBindHighlight(null);
@@ -870,9 +924,9 @@ export class InputController {
     // after finishing a text, drop back to the select tool (Excalidraw feel)
     const backToSelect = () => this.root.setTool("select");
 
-    // arrow label: update the arrow's `label`, not a text element
-    if (req.targetKind === "arrowLabel" && req.id) {
-      const before = scene.get(req.id) as ArrowElement | undefined;
+    // label: update an element's `label` (shape or arrow), not a text element
+    if (req.targetKind === "label" && req.id) {
+      const before = scene.get(req.id);
       if (before) {
         const after = clone(before);
         after.label = text.trim() || undefined;
@@ -1212,6 +1266,7 @@ export class InputController {
     this.drag = null;
     this.resizeS = null;
     this.rotateS = null;
+    this.bendS = null;
     this.marqueeS = null;
     this.root.scene.marqueeRect = null;
     this.drawStart = null;
@@ -1226,30 +1281,44 @@ export class InputController {
     const hit = hitTest(this.root.scene.all(), world, (this.touch ? 14 : PICK_TOL) / this.scale);
     if (!hit) return;
     if (hit.type === "text") this.openTextEditor(hit.id, world);
-    else if (hit.type === "arrow") this.openArrowLabel(hit.id);
+    else if (
+      hit.type === "arrow" ||
+      hit.type === "rectangle" ||
+      hit.type === "ellipse" ||
+      hit.type === "diamond"
+    )
+      this.openLabel(hit.id);
   };
 
-  private openArrowLabel(arrowId: string): void {
-    const arrow = this.root.scene.get(arrowId) as ArrowElement | undefined;
-    if (!arrow) return;
-    const mid = {
-      x: (arrow.x + arrow.points[0].x + arrow.x + arrow.points[arrow.points.length - 1].x) / 2,
-      y: (arrow.y + arrow.points[0].y + arrow.y + arrow.points[arrow.points.length - 1].y) / 2,
-    };
+  /** Edit an element's centered/midpoint label (shapes + arrows). */
+  private openLabel(id: string): void {
+    const el = this.root.scene.get(id);
+    if (!el) return;
+    let mx: number;
+    let my: number;
+    if (el.type === "arrow" || el.type === "line") {
+      const p0 = el.points[0];
+      const p1 = el.points[el.points.length - 1];
+      mx = el.x + (p0.x + p1.x) / 2;
+      my = el.y + (p0.y + p1.y) / 2;
+    } else {
+      mx = el.x + el.w / 2;
+      my = el.y + el.h / 2;
+    }
     const req: TextEditRequest = {
-      id: arrowId,
-      worldX: mid.x,
-      worldY: mid.y,
-      initial: arrow.label ?? "",
-      fontSize: 14,
-      color: arrow.strokeColor,
+      id,
+      worldX: mx,
+      worldY: my,
+      initial: el.label ?? "",
+      fontSize: el.type === "arrow" || el.type === "line" ? 14 : 16,
+      color: el.strokeColor,
       mono: false,
       autoWidth: true,
       boxWidth: 0,
-      targetKind: "arrowLabel",
+      targetKind: "label",
     };
     this.editingText = true;
-    this.root.scene.editingLabelId = arrowId; // hide the on-canvas label meanwhile
+    this.root.scene.editingLabelId = id; // hide the on-canvas label meanwhile
     this.root.scene.markDirty();
     this.root.onTextEdit?.(req);
   }

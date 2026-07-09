@@ -2,6 +2,8 @@ import type { Element } from "../types/model";
 import {
   aabb,
   boxCenter,
+  curveControl,
+  curvePointAt,
   distPointToSegment,
   pointInBox,
   rotateAround,
@@ -54,12 +56,16 @@ function hitOne(el: Element, p: Pt, tol: number): boolean {
     }
     case "line":
     case "arrow": {
-      const a = { x: el.x + el.points[0].x, y: el.y + el.points[0].y };
-      const b = {
-        x: el.x + el.points[el.points.length - 1].x,
-        y: el.y + el.points[el.points.length - 1].y,
-      };
-      return distPointToSegment(p, a, b) <= tol + el.strokeWidth;
+      const { a, b, c } = curveControl(el);
+      if (!c) return distPointToSegment(p, a, b) <= tol + el.strokeWidth;
+      // sample the quadratic curve and test the nearest sub-segment
+      let prev = a;
+      for (let i = 1; i <= 12; i++) {
+        const cur = curvePointAt(a, b, c, i / 12);
+        if (distPointToSegment(p, prev, cur) <= tol + el.strokeWidth) return true;
+        prev = cur;
+      }
+      return false;
     }
     case "freehand": {
       // pad the AABB, then check proximity to any segment of the path

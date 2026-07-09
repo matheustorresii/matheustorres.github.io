@@ -16,15 +16,19 @@ type MoveTarget =
 export function Sidebar({
   open,
   activeBoardId,
+  theme,
   onOpenBoard,
   onCreateBoard,
   onClose,
+  onToggleTheme,
 }: {
   open: boolean;
   activeBoardId: string | null;
+  theme: "dark" | "light";
   onOpenBoard: (id: string) => void;
   onCreateBoard: (folderId: string | null) => void;
   onClose: () => void;
+  onToggleTheme: () => void;
 }) {
   const lib = useLibraryStore();
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
@@ -215,6 +219,13 @@ export function Sidebar({
           11<span className="a">A</span>3
         </span>
         <div className="sidebar-actions">
+          <button
+            className="btn btn-icon"
+            title={theme === "dark" ? "Tema claro" : "Tema escuro"}
+            onClick={onToggleTheme}
+          >
+            {theme === "dark" ? "☀" : "☾"}
+          </button>
           <button
             className="btn btn-icon"
             title="Nova pasta"

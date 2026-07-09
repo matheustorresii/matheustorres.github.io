@@ -11,6 +11,7 @@ import { getSetting } from "../persistence/settingsRepo";
 import { syncAll } from "../sync/syncEngine";
 import { makeThumbnail } from "../persistence/thumbnails";
 import { debounce } from "../lib/debounce";
+import { getTheme, setTheme, STROKE_DARK, STROKE_LIGHT, type Theme } from "../theme";
 import { Sidebar } from "./Sidebar";
 import { Toolbar } from "./Toolbar";
 import { StylePanel } from "./StylePanel";
@@ -57,6 +58,7 @@ export function Workspace({ route }: { route: Route }) {
   const [syncOpen, setSyncOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [styleOpen, setStyleOpen] = useState(false); // mobile: style panel toggle
+  const [theme, setThemeState] = useState<Theme>(getTheme());
 
   const tool = useUiStore((s) => s.tool);
   const style = useUiStore((s) => s.style);
@@ -255,6 +257,25 @@ export function Workspace({ route }: { route: Route }) {
   };
   const handleUndo = () => rootRef.current?.undo();
   const handleRedo = () => rootRef.current?.redo();
+  const toggleTheme = () => {
+    const next: Theme = theme === "dark" ? "light" : "dark";
+    setTheme(next);
+    setThemeState(next);
+    // swap the default stroke color if the user hasn't customized it, so new
+    // drawings stay visible on the new background.
+    const cur = style.strokeColor;
+    const swap =
+      next === "light" && cur === STROKE_DARK
+        ? STROKE_LIGHT
+        : next === "dark" && cur === STROKE_LIGHT
+          ? STROKE_DARK
+          : null;
+    if (swap) {
+      setStyleStore({ strokeColor: swap });
+      if (rootRef.current) rootRef.current.style = { ...rootRef.current.style, strokeColor: swap };
+    }
+    rootRef.current?.scene.markDirty(); // repaint so default colors re-adapt
+  };
   const handleToggleSnap = () => {
     const next = !snap;
     setSnapStore(next);
@@ -414,9 +435,11 @@ export function Workspace({ route }: { route: Route }) {
       <Sidebar
         open={sidebarOpen}
         activeBoardId={activeBoardId}
+        theme={theme}
         onOpenBoard={openBoard}
         onCreateBoard={createAndOpen}
         onClose={() => setSidebarOpen(false)}
+        onToggleTheme={toggleTheme}
       />
     </div>
   );
@@ -529,15 +552,15 @@ function TextOverlay({
         fontFamily: mono ? "ui-monospace, monospace" : "Inter, sans-serif",
         padding: pad,
         background:
-          req.targetKind === "arrowLabel" ? "#0f120b" : mono ? "#282c34" : "transparent",
+          req.targetKind === "label" ? "#0f120b" : mono ? "#282c34" : "transparent",
         boxSizing: "border-box",
         whiteSpace: req.autoWidth ? "pre" : "pre-wrap",
         overflow: "hidden",
         minWidth: 40,
         width: req.autoWidth ? undefined : req.boxWidth * v.scale,
-        // arrow labels are centered on the arrow midpoint (match the drawn chip)
-        textAlign: req.targetKind === "arrowLabel" ? "center" : undefined,
-        transform: req.targetKind === "arrowLabel" ? "translate(-50%, -50%)" : undefined,
+        // labels are centered on the element (match the drawn label)
+        textAlign: req.targetKind === "label" ? "center" : undefined,
+        transform: req.targetKind === "label" ? "translate(-50%, -50%)" : undefined,
       }}
     />
   );

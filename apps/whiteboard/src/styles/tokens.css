@@ -39,3 +39,28 @@
   --shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
   --ring: 0 0 0 2px var(--accent);
 }
+
+/* Light theme — keeps the green identity but darkens the accent for contrast */
+:root[data-theme="light"] {
+  --accent: #6f9a12;
+  --accent-hover: #7dab1a;
+  --accent-press: #5c800e;
+  --accent-ink: #ffffff;
+
+  --bg: #f2f4ea;
+  --bg-canvas: #fbfcf6;
+  --panel: #ffffff;
+  --panel-2: #eef1e2;
+  --line: #e0e4d3;
+  --line-strong: #c7cfae;
+
+  --text: #1b1e12;
+  --muted: #5c6347;
+
+  --danger: #cf3d3d;
+  --warning: #b07208;
+  --selection: #6f9a12;
+  --grid: #e6ead9;
+
+  --shadow: 0 8px 24px rgba(60, 66, 40, 0.18);
+}

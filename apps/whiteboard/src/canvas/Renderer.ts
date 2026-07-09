@@ -1,6 +1,6 @@
 import type { Element } from "../types/model";
 import type { SceneStore } from "./SceneStore";
-import { aabb, boxesIntersect, GRID } from "./geometry";
+import { aabb, boxesIntersect, curveControl, curvePointAt, GRID } from "./geometry";
 import { drawElement } from "./shapes";
 import { cornerHandles, selectionBox, HANDLE_SCREEN_SIZE } from "./selection";
 import { visibleWorldBox } from "./viewport";
@@ -52,8 +52,8 @@ export function draw(
   for (const el of sorted) {
     if (el.id === scene.editingId) continue; // hidden while its text overlay is open
     if (!boxesIntersect(aabb(el), view)) continue; // culling
-    // hide only the label while its arrow-label overlay is open (arrow stays)
-    if (el.id === scene.editingLabelId && el.type === "arrow") {
+    // hide only the label while its label overlay is open (the element stays)
+    if (el.id === scene.editingLabelId) {
       drawElement(ctx, { ...el, label: undefined });
     } else {
       drawElement(ctx, el);
@@ -181,6 +181,17 @@ function drawSelection(
     ctx.fillStyle = SELECTION_COLOR;
     ctx.fill();
     ctx.stroke();
+
+    // bend handle at the midpoint of a line/arrow (drag it to curve the shape)
+    if (el.type === "line" || el.type === "arrow") {
+      const g = curveControl(el);
+      const mid = curvePointAt(g.a, g.b, g.c, 0.5);
+      ctx.beginPath();
+      ctx.arc(mid.x, mid.y, (HANDLE_SCREEN_SIZE / 2 + 1) / scale, 0, Math.PI * 2);
+      ctx.fillStyle = SELECTION_COLOR;
+      ctx.fill();
+      ctx.stroke();
+    }
   }
   ctx.restore();
 }

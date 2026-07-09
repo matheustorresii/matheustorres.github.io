@@ -2,7 +2,7 @@ import type { StyleDefaults, Tool } from "../types/model";
 import type { SelInfo } from "./Workspace";
 import { CODE_LANGS } from "../canvas/highlight";
 
-const STROKE_COLORS = ["#acd52c", "#e8ecd9", "#ff5c5c", "#4aa3ff", "#f0b429", "#b07cff"];
+const STROKE_COLORS = ["#acd52c", "#e8ecd9", "#1b1e12", "#ff5c5c", "#4aa3ff", "#f0b429", "#b07cff"];
 const FILL_COLORS = ["transparent", "#2a3316", "#3a2020", "#1f3040", "#3d3410"];
 
 export function StylePanel({
