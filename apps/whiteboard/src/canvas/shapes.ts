@@ -308,9 +308,14 @@ export function drawText(ctx: CanvasRenderingContext2D, el: TextElement): void {
   }
 
   ctx.fillStyle = adapt(el.strokeColor);
+  const align = el.align ?? "left";
+  const anchorX =
+    align === "center" ? el.x + el.w / 2 : align === "right" ? el.x + el.w - pad : el.x + pad;
+  ctx.textAlign = align;
   lines.forEach((line, i) => {
-    ctx.fillText(line, el.x + pad, el.y + pad + i * lineHeight);
+    ctx.fillText(line, anchorX, el.y + pad + i * lineHeight);
   });
+  ctx.textAlign = "left";
 }
 
 /** Element-level measure used on commit/resize. */

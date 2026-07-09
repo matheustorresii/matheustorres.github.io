@@ -1,22 +1,23 @@
 import Prism from "prismjs";
-// languages (order matters — deps first). markup/css/js are safe standalones.
+// languages (order matters — deps first). clike is the base for many of them.
 import "prismjs/components/prism-clike";
 import "prismjs/components/prism-javascript";
 import "prismjs/components/prism-typescript";
-import "prismjs/components/prism-markup";
-import "prismjs/components/prism-css";
-import "prismjs/components/prism-json";
+import "prismjs/components/prism-markup"; // HTML
 import "prismjs/components/prism-python";
-import "prismjs/components/prism-bash";
+import "prismjs/components/prism-java";
+import "prismjs/components/prism-kotlin";
+import "prismjs/components/prism-go";
+import "prismjs/components/prism-swift";
 
 export const CODE_LANGS: { id: string; label: string }[] = [
   { id: "typescript", label: "TypeScript" },
-  { id: "javascript", label: "JavaScript" },
   { id: "python", label: "Python" },
-  { id: "json", label: "JSON" },
-  { id: "bash", label: "Bash" },
+  { id: "java", label: "Java" },
+  { id: "kotlin", label: "Kotlin" },
+  { id: "go", label: "Go" },
+  { id: "swift", label: "Swift" },
   { id: "markup", label: "HTML" },
-  { id: "css", label: "CSS" },
   { id: "plain", label: "Texto" },
 ];
 

@@ -28,6 +28,7 @@ export interface SelInfo {
   mono: boolean;
   rounded: boolean;
   lang: string;
+  align: "left" | "center" | "right";
 }
 
 interface UiMirror {
@@ -171,6 +172,7 @@ export function Workspace({ route }: { route: Route }) {
             mono: el.type === "text" ? !!el.mono : false,
             rounded: !!el.rounded,
             lang: el.type === "text" ? (el.lang ?? "typescript") : "typescript",
+            align: el.type === "text" ? (el.align ?? "left") : "left",
           };
         }
       }
@@ -558,8 +560,9 @@ function TextOverlay({
         overflow: "hidden",
         minWidth: 40,
         width: req.autoWidth ? undefined : req.boxWidth * v.scale,
-        // labels are centered on the element (match the drawn label)
-        textAlign: req.targetKind === "label" ? "center" : undefined,
+        // labels are centered; text follows the chosen alignment while editing
+        textAlign:
+          req.targetKind === "label" ? "center" : isNew ? liveStyle.align : undefined,
         transform: req.targetKind === "label" ? "translate(-50%, -50%)" : undefined,
       }}
     />

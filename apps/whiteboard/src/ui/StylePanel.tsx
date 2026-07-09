@@ -32,6 +32,7 @@ export function StylePanel({
   const curMono = sel?.type === "text" ? sel.mono : style.mono;
   const curRounded = isCorner && sel ? sel.rounded : style.rounded;
   const curLang = sel?.type === "text" ? sel.lang : style.lang;
+  const curAlign = sel?.type === "text" ? sel.align : style.align;
 
   return (
     <div className={`style-panel ${open ? "is-open" : ""}`}>
@@ -121,6 +122,25 @@ export function StylePanel({
             value={curFontSize}
             onChange={(e) => onStyle({ fontSize: Number(e.target.value) })}
           />
+        </div>
+      )}
+
+      {isText && (
+        <div className="field">
+          <label>Alinhamento</label>
+          <div className="row">
+            {(["left", "center", "right"] as const).map((a) => (
+              <button
+                key={a}
+                className={`btn ${curAlign === a ? "btn-primary" : ""}`}
+                style={{ flex: 1 }}
+                onClick={() => onStyle({ align: a })}
+                title={a}
+              >
+                {a === "left" ? "⇤" : a === "center" ? "≡" : "⇥"}
+              </button>
+            ))}
+          </div>
         </div>
       )}
 

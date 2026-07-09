@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { Board } from "../types/model";
 import { encodeBoardToPayload } from "../sync/shareLink";
+import { exportPDF, exportPNG } from "../export/exportBoard";
 
 // Chat apps sometimes truncate very long URLs; warn past this.
 const LINK_WARN = 8000;
@@ -58,6 +59,18 @@ export function ShareDialog({ board, onClose }: { board: Board; onClose: () => v
         </div>
 
         {warn && <div style={{ color: "var(--warning)", fontSize: 13 }}>{warn}</div>}
+
+        <div className="field">
+          <label>Ou baixar</label>
+          <div className="row">
+            <button className="btn" style={{ flex: 1 }} onClick={() => exportPNG(board)}>
+              🖼 PNG
+            </button>
+            <button className="btn" style={{ flex: 1 }} onClick={() => void exportPDF(board)}>
+              📄 PDF
+            </button>
+          </div>
+        </div>
 
         <div className="dialog-actions">
           <button className="btn" onClick={onClose}>

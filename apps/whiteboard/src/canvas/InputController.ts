@@ -981,6 +981,7 @@ export class InputController {
       fontFamily: "Inter",
       mono: req.mono,
       lang: this.root.style.lang,
+      align: this.root.style.align,
       autoWidth: req.autoWidth,
     };
     const size = measureTextEl(this.measureCtx(), el);
@@ -1040,6 +1041,9 @@ export class InputController {
       }
       if (patch.lang !== undefined && after.type === "text") {
         (after as TextElement).lang = patch.lang;
+      }
+      if (patch.align !== undefined && after.type === "text") {
+        (after as TextElement).align = patch.align;
       }
       after.updatedAt = Date.now();
       changes.push({ before, after });
