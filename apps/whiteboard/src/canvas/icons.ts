@@ -146,6 +146,170 @@ export const ICONS: Record<string, IconFn> = {
 
 export const ICON_IDS = Object.keys(ICONS);
 
+// AWS-style service icons: a category-colored rounded square with a white glyph
+// (my own simplified renditions — not the official AWS asset set).
+interface AwsIcon {
+  bg: string;
+  glyph: IconFn;
+}
+const O = "#ED7100"; // compute
+const G = "#7AA116"; // storage
+const B = "#3334B9"; // database
+const P = "#8C4FFF"; // networking
+const K = "#E7157B"; // app integration / management
+const R = "#DD344C"; // security
+
+function cyl(ctx: CanvasRenderingContext2D, extraBand: boolean): void {
+  ctx.beginPath();
+  ctx.ellipse(12, 7, 6, 2.2, 0, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(6, 7);
+  ctx.lineTo(6, 17);
+  ctx.moveTo(18, 7);
+  ctx.lineTo(18, 17);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.ellipse(12, 17, 6, 2.2, 0, 0, Math.PI);
+  if (extraBand) ctx.ellipse(12, 12, 6, 2.2, 0, 0, Math.PI);
+  ctx.stroke();
+}
+
+export const AWS_ICONS: Record<string, AwsIcon> = {
+  "aws-ec2": {
+    bg: O,
+    glyph: (c) => {
+      c.strokeRect(6.5, 6.5, 11, 11);
+      c.strokeRect(9.5, 9.5, 5, 5);
+      c.beginPath();
+      for (const v of [9, 12, 15]) {
+        c.moveTo(v, 4.5); c.lineTo(v, 6.5); c.moveTo(v, 17.5); c.lineTo(v, 19.5);
+        c.moveTo(4.5, v); c.lineTo(6.5, v); c.moveTo(17.5, v); c.lineTo(19.5, v);
+      }
+      c.stroke();
+    },
+  },
+  "aws-lambda": {
+    bg: O,
+    glyph: (c) => {
+      c.beginPath();
+      c.moveTo(7, 5); c.lineTo(10.5, 5); c.lineTo(17.5, 19);
+      c.moveTo(14, 11.5); c.lineTo(8, 19);
+      c.stroke();
+    },
+  },
+  "aws-ecs": {
+    bg: O,
+    glyph: (c) => {
+      c.strokeRect(5, 5, 6, 6);
+      c.strokeRect(13, 5, 6, 6);
+      c.strokeRect(5, 13, 6, 6);
+      c.strokeRect(13, 13, 6, 6);
+    },
+  },
+  "aws-s3": {
+    bg: G,
+    glyph: (c) => {
+      c.beginPath();
+      c.moveTo(5, 6.5); c.lineTo(19, 6.5); c.lineTo(17, 19); c.lineTo(7, 19); c.closePath();
+      c.stroke();
+      c.beginPath();
+      c.moveTo(5, 6.5); c.bezierCurveTo(5, 4.5, 19, 4.5, 19, 6.5);
+      c.stroke();
+    },
+  },
+  "aws-rds": { bg: B, glyph: (c) => cyl(c, false) },
+  "aws-dynamodb": { bg: B, glyph: (c) => cyl(c, true) },
+  "aws-apigateway": {
+    bg: P,
+    glyph: (c) => {
+      c.beginPath();
+      c.moveTo(10, 5); c.quadraticCurveTo(6, 5, 6, 9.5); c.quadraticCurveTo(6, 12, 4, 12);
+      c.quadraticCurveTo(6, 12, 6, 14.5); c.quadraticCurveTo(6, 19, 10, 19);
+      c.moveTo(14, 5); c.quadraticCurveTo(18, 5, 18, 9.5); c.quadraticCurveTo(18, 12, 20, 12);
+      c.quadraticCurveTo(18, 12, 18, 14.5); c.quadraticCurveTo(18, 19, 14, 19);
+      c.stroke();
+    },
+  },
+  "aws-cloudfront": {
+    bg: P,
+    glyph: (c) => {
+      c.beginPath();
+      c.arc(12, 12, 7, 0, Math.PI * 2);
+      c.moveTo(5, 12); c.lineTo(19, 12);
+      c.stroke();
+      c.beginPath();
+      c.ellipse(12, 12, 3, 7, 0, 0, Math.PI * 2);
+      c.stroke();
+    },
+  },
+  "aws-vpc": {
+    bg: P,
+    glyph: (c) => {
+      c.setLineDash([2.5, 2]);
+      c.beginPath();
+      if (c.roundRect) c.roundRect(4, 4, 16, 16, 3);
+      else c.rect(4, 4, 16, 16);
+      c.stroke();
+      c.setLineDash([]);
+    },
+  },
+  "aws-elb": {
+    bg: P,
+    glyph: (c) => {
+      c.beginPath();
+      c.arc(6, 12, 2, 0, Math.PI * 2);
+      c.arc(18, 6.5, 2, 0, Math.PI * 2);
+      c.arc(18, 17.5, 2, 0, Math.PI * 2);
+      c.moveTo(8, 12); c.lineTo(16, 6.5);
+      c.moveTo(8, 12); c.lineTo(16, 17.5);
+      c.stroke();
+    },
+  },
+  "aws-sqs": {
+    bg: K,
+    glyph: (c) => {
+      for (const x of [6, 10.5, 15]) c.strokeRect(x, 7, 3.2, 10);
+    },
+  },
+  "aws-sns": {
+    bg: K,
+    glyph: (c) => {
+      c.beginPath();
+      c.arc(7.5, 12, 2.4, 0, Math.PI * 2);
+      c.arc(17, 6.5, 1.9, 0, Math.PI * 2);
+      c.arc(19, 12, 1.9, 0, Math.PI * 2);
+      c.arc(17, 17.5, 1.9, 0, Math.PI * 2);
+      c.moveTo(10, 11); c.lineTo(15, 7);
+      c.moveTo(10, 12); c.lineTo(17, 12);
+      c.moveTo(10, 13); c.lineTo(15, 17);
+      c.stroke();
+    },
+  },
+  "aws-iam": {
+    bg: R,
+    glyph: (c) => {
+      c.beginPath();
+      c.arc(9, 9, 3.6, 0, Math.PI * 2);
+      c.moveTo(11.2, 11.2); c.lineTo(19, 19);
+      c.moveTo(15.5, 15.5); c.lineTo(17.5, 13.5);
+      c.stroke();
+    },
+  },
+  "aws-cloudwatch": {
+    bg: K,
+    glyph: (c) => {
+      c.beginPath();
+      c.arc(12, 12, 7, 0, Math.PI * 2);
+      c.moveTo(12, 12); c.lineTo(12, 7.5);
+      c.moveTo(12, 12); c.lineTo(15.5, 14);
+      c.stroke();
+    },
+  },
+};
+
+export const AWS_ICON_IDS = Object.keys(AWS_ICONS);
+
 export const ICON_LABELS: Record<string, string> = {
   database: "Database",
   server: "Server",
@@ -159,6 +323,20 @@ export const ICON_LABELS: Record<string, string> = {
   gear: "Config",
   lambda: "Function",
   folder: "Folder",
+  "aws-ec2": "EC2",
+  "aws-lambda": "Lambda",
+  "aws-ecs": "ECS",
+  "aws-s3": "S3",
+  "aws-rds": "RDS",
+  "aws-dynamodb": "DynamoDB",
+  "aws-apigateway": "API Gateway",
+  "aws-cloudfront": "CloudFront",
+  "aws-vpc": "VPC",
+  "aws-elb": "ELB",
+  "aws-sqs": "SQS",
+  "aws-sns": "SNS",
+  "aws-iam": "IAM",
+  "aws-cloudwatch": "CloudWatch",
 };
 
 /** Draw an icon element's art into its world-space box. */
@@ -172,6 +350,26 @@ export function drawIconArt(
   color: string,
   opacity: number,
 ): void {
+  const aws = AWS_ICONS[iconId];
+  if (aws) {
+    ctx.save();
+    ctx.globalAlpha = opacity;
+    ctx.translate(x, y);
+    ctx.scale(w / 24, h / 24);
+    ctx.fillStyle = aws.bg;
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(0.5, 0.5, 23, 23, 4);
+    else ctx.rect(0.5, 0.5, 23, 23);
+    ctx.fill();
+    ctx.strokeStyle = "#ffffff";
+    ctx.fillStyle = "#ffffff";
+    ctx.lineWidth = 1.7;
+    ctx.lineJoin = "round";
+    ctx.lineCap = "round";
+    aws.glyph(ctx);
+    ctx.restore();
+    return;
+  }
   const fn = ICONS[iconId];
   if (!fn) return;
   ctx.save();

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type JSX } from "react";
 import type { Tool } from "../types/model";
-import { ICON_IDS, ICON_LABELS, drawIconArt } from "../canvas/icons";
+import { AWS_ICON_IDS, ICON_IDS, ICON_LABELS, drawIconArt } from "../canvas/icons";
 
 function IconThumb({ id, size = 24 }: { id: string; size?: number }) {
   const ref = useRef<HTMLCanvasElement>(null);
@@ -19,18 +19,22 @@ function IconThumb({ id, size = 24 }: { id: string; size?: number }) {
 }
 
 function IconPicker({ onPick }: { onPick: (id: string) => void }) {
+  const cell = (id: string) => (
+    <button
+      key={id}
+      className="icon-cell"
+      title={ICON_LABELS[id] ?? id}
+      onClick={() => onPick(id)}
+    >
+      <IconThumb id={id} />
+    </button>
+  );
   return (
     <div className="icon-picker">
-      {ICON_IDS.map((id) => (
-        <button
-          key={id}
-          className="icon-cell"
-          title={ICON_LABELS[id] ?? id}
-          onClick={() => onPick(id)}
-        >
-          <IconThumb id={id} />
-        </button>
-      ))}
+      <div className="icon-group-label">Genéricos</div>
+      <div className="icon-grid">{ICON_IDS.map(cell)}</div>
+      <div className="icon-group-label">AWS</div>
+      <div className="icon-grid">{AWS_ICON_IDS.map(cell)}</div>
     </div>
   );
 }
@@ -115,6 +119,7 @@ export function Toolbar({
 }) {
   const [pickerOpen, setPickerOpen] = useState(false);
   return (
+    <>
     <div className="toolbar">
       {TOOLS.map((t) => (
         <button
@@ -139,14 +144,6 @@ export function Toolbar({
           <path d="M17 13.5v7M13.5 17h7" />
         </svg>
       </button>
-      {pickerOpen && (
-        <IconPicker
-          onPick={(id) => {
-            onPickIcon(id);
-            setPickerOpen(false);
-          }}
-        />
-      )}
       <div className="toolbar-sep" />
       <button
         className="tool"
@@ -183,5 +180,14 @@ export function Toolbar({
         </svg>
       </button>
     </div>
+    {pickerOpen && (
+      <IconPicker
+        onPick={(id) => {
+          onPickIcon(id);
+          setPickerOpen(false);
+        }}
+      />
+    )}
+    </>
   );
 }
