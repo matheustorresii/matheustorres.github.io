@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type JSX } from "react";
 import type { Tool } from "../types/model";
-import { AWS_ICON_IDS, ICON_IDS, ICON_LABELS, drawIconArt } from "../canvas/icons";
+import { ICON_IDS, ICON_LABELS, drawIconArt } from "../canvas/icons";
+import { AwsPicker } from "./AwsPicker";
 
 function IconThumb({ id, size = 24 }: { id: string; size?: number }) {
   const ref = useRef<HTMLCanvasElement>(null);
@@ -18,7 +19,13 @@ function IconThumb({ id, size = 24 }: { id: string; size?: number }) {
   return <canvas ref={ref} style={{ width: size, height: size }} />;
 }
 
-function IconPicker({ onPick }: { onPick: (id: string) => void }) {
+function IconPicker({
+  onPick,
+  onOpenAws,
+}: {
+  onPick: (id: string) => void;
+  onOpenAws: () => void;
+}) {
   const cell = (id: string) => (
     <button
       key={id}
@@ -33,8 +40,11 @@ function IconPicker({ onPick }: { onPick: (id: string) => void }) {
     <div className="icon-picker">
       <div className="icon-group-label">Genéricos</div>
       <div className="icon-grid">{ICON_IDS.map(cell)}</div>
-      <div className="icon-group-label">AWS</div>
-      <div className="icon-grid">{AWS_ICON_IDS.map(cell)}</div>
+      <button className="aws-open-btn" onClick={onOpenAws}>
+        <span className="aws-badge">aws</span>
+        Ícones AWS oficiais
+        <span className="aws-chevron">›</span>
+      </button>
     </div>
   );
 }
@@ -118,6 +128,7 @@ export function Toolbar({
   onPickIcon: (id: string) => void;
 }) {
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [awsOpen, setAwsOpen] = useState(false);
   return (
     <>
     <div className="toolbar">
@@ -186,6 +197,17 @@ export function Toolbar({
           onPickIcon(id);
           setPickerOpen(false);
         }}
+        onOpenAws={() => setAwsOpen(true)}
+      />
+    )}
+    {awsOpen && (
+      <AwsPicker
+        onPick={(id) => {
+          onPickIcon(id);
+          setAwsOpen(false);
+          setPickerOpen(false);
+        }}
+        onClose={() => setAwsOpen(false)}
       />
     )}
     </>

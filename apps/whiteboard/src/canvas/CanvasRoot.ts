@@ -7,6 +7,7 @@ import { InputController } from "./InputController";
 import { MAX_SCALE, MIN_SCALE, zoomAt } from "./viewport";
 import { clamp } from "./geometry";
 import { setImageRedrawHandler } from "./imageCache";
+import { setAwsReadyHandler } from "./awsIconSvg";
 
 export interface TextEditRequest {
   id: string | null; // null = new text element
@@ -68,6 +69,7 @@ export class CanvasRoot {
     };
     this.scene.changed.subscribe(() => this.onUiSync?.());
     setImageRedrawHandler(() => this.scene.markDirty());
+    setAwsReadyHandler(() => this.scene.markDirty());
 
     this.input = new InputController(this);
 

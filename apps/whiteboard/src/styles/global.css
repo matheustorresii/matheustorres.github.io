@@ -490,6 +490,154 @@ button:focus-visible {
   gap: var(--space-2);
 }
 
+/* ---- AWS icon picker ---- */
+.aws-open-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  padding: 8px 10px;
+  width: 100%;
+  background: var(--panel-2);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.aws-open-btn:hover {
+  border-color: var(--accent);
+}
+.aws-badge {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: -0.5px;
+  color: #fff;
+  background: #ec7211;
+  border-radius: 3px;
+  padding: 1px 4px;
+  text-transform: lowercase;
+}
+.aws-chevron {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 16px;
+}
+.aws-picker {
+  background: var(--panel);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  width: min(680px, 92vw);
+  max-height: 82vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.aws-picker-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line);
+}
+.aws-picker-head strong {
+  font-family: var(--font-display);
+  font-size: 15px;
+}
+.aws-picker-count {
+  font-size: 11px;
+  color: var(--muted);
+  background: var(--panel-2);
+  border-radius: 10px;
+  padding: 1px 8px;
+}
+.aws-search {
+  flex: 1;
+  background: var(--panel-2);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  padding: 6px 10px;
+  font-size: 13px;
+}
+.aws-close {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font-size: 15px;
+  cursor: pointer;
+  padding: 4px 6px;
+}
+.aws-close:hover {
+  color: var(--text);
+}
+.aws-cats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--line);
+}
+.aws-cat {
+  background: var(--panel-2);
+  border: 1px solid transparent;
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 11px;
+  padding: 3px 10px;
+  cursor: pointer;
+}
+.aws-cat:hover {
+  color: var(--text);
+}
+.aws-cat.active {
+  color: var(--text);
+  border-color: var(--accent);
+  background: var(--panel);
+}
+.aws-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(86px, 1fr));
+  gap: 6px;
+  padding: 14px;
+  overflow-y: auto;
+}
+.aws-loading {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: var(--muted);
+  padding: 30px;
+  font-size: 13px;
+}
+.aws-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 4px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  cursor: pointer;
+}
+.aws-item:hover {
+  background: var(--panel-2);
+  border-color: var(--accent);
+}
+.aws-item img {
+  pointer-events: none;
+}
+.aws-item span {
+  font-size: 10.5px;
+  line-height: 1.15;
+  text-align: center;
+  color: var(--muted);
+}
+
 /* ---- empty state ---- */
 .empty {
   position: absolute;

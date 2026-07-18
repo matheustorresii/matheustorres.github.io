@@ -2,6 +2,12 @@
 // drawIcon() scales that box to the element's world size. Stroke uses the
 // element color; a couple of icons add a subtle fill.
 
+import { getImage } from "./imageCache";
+import { awsSvgDataUri } from "./awsIconSvg";
+
+/** id prefix for official AWS service icons, e.g. "aws-svc:ec2". */
+export const AWS_SVC_PREFIX = "aws-svc:";
+
 type IconFn = (ctx: CanvasRenderingContext2D) => void;
 
 // helpers operate in the 24x24 space
@@ -350,6 +356,25 @@ export function drawIconArt(
   color: string,
   opacity: number,
 ): void {
+  // Official AWS service icon: draw the cached SVG bitmap, or a placeholder
+  // rounded square while its data chunk / image is still loading.
+  if (iconId.startsWith(AWS_SVC_PREFIX)) {
+    const uri = awsSvgDataUri(iconId.slice(AWS_SVC_PREFIX.length));
+    const img = uri ? getImage(uri) : null;
+    ctx.save();
+    ctx.globalAlpha = opacity;
+    if (img) {
+      ctx.drawImage(img, x, y, w, h);
+    } else {
+      ctx.fillStyle = "rgba(127,127,127,0.18)";
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(x, y, w, h, w * 0.12);
+      else ctx.rect(x, y, w, h);
+      ctx.fill();
+    }
+    ctx.restore();
+    return;
+  }
   const aws = AWS_ICONS[iconId];
   if (aws) {
     ctx.save();
