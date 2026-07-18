@@ -121,6 +121,12 @@ export class CanvasRoot {
     this.onUiSync?.();
   }
 
+  /** Change the routing of the selected connectors (straight/curve/elbow). */
+  setRouting(mode: "straight" | "curve" | "elbow"): void {
+    this.input.applyRoutingToSelection(mode);
+    this.onUiSync?.();
+  }
+
   setSnap(on: boolean): void {
     this.snapEnabled = on;
     this.scene.markDirty(); // grid dots appear/disappear immediately

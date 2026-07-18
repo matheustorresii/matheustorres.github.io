@@ -12,6 +12,7 @@ export function StylePanel({
   open,
   onStyle,
   onMono,
+  onRouting,
 }: {
   sel: SelInfo | null;
   style: StyleDefaults;
@@ -19,6 +20,7 @@ export function StylePanel({
   open: boolean;
   onStyle: (patch: Partial<StyleDefaults>) => void;
   onMono: (on: boolean) => void;
+  onRouting: (mode: "straight" | "curve" | "elbow") => void;
 }) {
   // reflect the selected element if any, else the active tool's defaults
   const cur = sel ?? style;
@@ -28,6 +30,10 @@ export function StylePanel({
   const isCorner = sel
     ? sel.type === "rectangle" || sel.type === "diamond"
     : tool === "rectangle" || tool === "diamond";
+  const isConnector = sel
+    ? sel.type === "arrow" || sel.type === "line"
+    : tool === "arrow" || tool === "line";
+  const curRouting = sel?.routing ?? "straight";
   const curFontSize = sel?.type === "text" ? sel.fontSize : style.fontSize;
   const curMono = sel?.type === "text" ? sel.mono : style.mono;
   const curRounded = isCorner && sel ? sel.rounded : style.rounded;
@@ -107,6 +113,31 @@ export function StylePanel({
             >
               Reto
             </button>
+          </div>
+        </div>
+      )}
+
+      {isConnector && sel && (
+        <div className="field">
+          <label>Traçado</label>
+          <div className="row">
+            {(
+              [
+                ["straight", "Reta", "╱"],
+                ["curve", "Curva", "︵"],
+                ["elbow", "Cotovelo", "⌐"],
+              ] as const
+            ).map(([mode, title, glyph]) => (
+              <button
+                key={mode}
+                className={`btn ${curRouting === mode ? "btn-primary" : ""}`}
+                style={{ flex: 1 }}
+                onClick={() => onRouting(mode)}
+                title={title}
+              >
+                {glyph}
+              </button>
+            ))}
           </div>
         </div>
       )}

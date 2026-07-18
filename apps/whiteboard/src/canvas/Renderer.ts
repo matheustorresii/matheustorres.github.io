@@ -182,8 +182,9 @@ function drawSelection(
     ctx.fill();
     ctx.stroke();
 
-    // bend handle at the midpoint of a line/arrow (drag it to curve the shape)
-    if (el.type === "line" || el.type === "arrow") {
+    // bend handle at the midpoint of a line/arrow (drag it to curve the shape).
+    // elbow-routed connectors have fixed right angles, so no bend handle.
+    if ((el.type === "line" || el.type === "arrow") && !el.elbow) {
       const g = curveControl(el);
       const mid = curvePointAt(g.a, g.b, g.c, 0.5);
       ctx.beginPath();

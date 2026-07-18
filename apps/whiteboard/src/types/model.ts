@@ -50,6 +50,7 @@ export interface LineElement extends BaseElement {
   type: "line";
   points: LinePoint[];
   bend?: number; // perpendicular curve offset at the midpoint (0 = straight)
+  elbow?: boolean; // orthogonal right-angle routing (overrides bend)
 }
 
 export interface Binding {
@@ -65,6 +66,7 @@ export interface ArrowElement extends BaseElement {
   boundStart?: Binding;
   boundEnd?: Binding;
   bend?: number; // perpendicular curve offset at the midpoint (0 = straight)
+  elbow?: boolean; // orthogonal right-angle routing (overrides bend)
 }
 
 export interface FreehandElement extends BaseElement {

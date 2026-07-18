@@ -25,6 +25,7 @@ import {
   boxCenter,
   boxesIntersect,
   clamp,
+  connectorMidpoint,
   curveControl,
   curvePointAt,
   normalizeBox,
@@ -254,7 +255,7 @@ export class InputController {
     };
     const hit = this.touch ? HANDLE_HIT + 12 : HANDLE_HIT; // fatter for fingers
     // bend handle (line/arrow midpoint) takes priority — it sits over the box
-    if (el.type === "line" || el.type === "arrow") {
+    if ((el.type === "line" || el.type === "arrow") && !el.elbow) {
       const g = curveControl(el);
       const mid = curvePointAt(g.a, g.b, g.c, 0.5);
       const s = toScreen(mid);
@@ -1051,6 +1052,36 @@ export class InputController {
     this.root.history.execute(scene, updateMany(changes));
   }
 
+  /** Set routing (straight/curve/elbow) on selected lines & arrows. */
+  applyRoutingToSelection(mode: "straight" | "curve" | "elbow"): void {
+    const scene = this.root.scene;
+    const sel = scene
+      .selectedElements()
+      .filter((e) => e.type === "arrow" || e.type === "line");
+    if (sel.length === 0) return;
+    const changes: { before: Element; after: Element }[] = [];
+    for (const el of sel) {
+      const before = clone(el);
+      const after = clone(el) as LineElement | ArrowElement;
+      if (mode === "elbow") {
+        after.elbow = true;
+        after.bend = 0;
+      } else if (mode === "curve") {
+        after.elbow = false;
+        // give it a visible arc if it was straight (perpendicular to length)
+        const { a, b } = curveControl({ ...after, bend: 0 });
+        const len = Math.hypot(b.x - a.x, b.y - a.y);
+        after.bend = after.bend || Math.max(24, len * 0.25);
+      } else {
+        after.elbow = false;
+        after.bend = 0;
+      }
+      after.updatedAt = Date.now();
+      changes.push({ before, after });
+    }
+    this.root.history.execute(scene, updateMany(changes));
+  }
+
   // ---- wheel ----
   private onWheel = (e: WheelEvent): void => {
     e.preventDefault();
@@ -1250,6 +1281,9 @@ export class InputController {
         updatedAt: now,
       };
     });
+    // lookup that resolves the freshly-pasted shapes (by new id) first
+    const byId = new Map(out.map((e) => [e.id, e] as const));
+    const lookup = (id: string): Element | undefined => byId.get(id) ?? scene.get(id);
     for (const el of out) {
       if (el.type !== "arrow") continue;
       const a = el as ArrowElement;
@@ -1261,6 +1295,8 @@ export class InputController {
         a.boundEnd && idMap.has(a.boundEnd.elementId)
           ? { ...a.boundEnd, elementId: idMap.get(a.boundEnd.elementId)! }
           : undefined;
+      // re-anchor points onto the pasted targets so the copy is self-consistent
+      if (a.boundStart || a.boundEnd) Object.assign(a, applyBindings(a, lookup));
     }
     return out;
   }
@@ -1283,16 +1319,35 @@ export class InputController {
     if (this.root.readonly) return;
     const world = this.worldPt(e);
     const hit = hitTest(this.root.scene.all(), world, (this.touch ? 14 : PICK_TOL) / this.scale);
-    if (!hit) return;
-    if (hit.type === "text") this.openTextEditor(hit.id, world);
-    else if (
-      hit.type === "arrow" ||
-      hit.type === "rectangle" ||
-      hit.type === "ellipse" ||
-      hit.type === "diamond"
-    )
-      this.openLabel(hit.id);
+    if (hit) {
+      if (hit.type === "text") this.openTextEditor(hit.id, world);
+      else if (
+        hit.type === "arrow" ||
+        hit.type === "rectangle" ||
+        hit.type === "ellipse" ||
+        hit.type === "diamond"
+      )
+        this.openLabel(hit.id);
+      return;
+    }
+    // outline hit-test misses the interior of an unfilled shape — but a
+    // double-click there should still open (or add) that shape's label.
+    const shape = this.shapeBoxAt(world);
+    if (shape) this.openLabel(shape.id);
   };
+
+  /** Topmost rectangle/ellipse/diamond whose box contains world point p. */
+  private shapeBoxAt(p: Pt): Element | null {
+    const sorted = [...this.root.scene.all()].sort((a, b) => b.zIndex - a.zIndex);
+    for (const el of sorted) {
+      if (el.type !== "rectangle" && el.type !== "ellipse" && el.type !== "diamond")
+        continue;
+      let q = p;
+      if (el.rotation) q = rotateAround(p, boxCenter(aabb(el)), -el.rotation);
+      if (pointInBox(q, aabb(el))) return el;
+    }
+    return null;
+  }
 
   /** Edit an element's centered/midpoint label (shapes + arrows). */
   private openLabel(id: string): void {
@@ -1301,10 +1356,9 @@ export class InputController {
     let mx: number;
     let my: number;
     if (el.type === "arrow" || el.type === "line") {
-      const p0 = el.points[0];
-      const p1 = el.points[el.points.length - 1];
-      mx = el.x + (p0.x + p1.x) / 2;
-      my = el.y + (p0.y + p1.y) / 2;
+      const m = connectorMidpoint(el);
+      mx = m.x;
+      my = m.y;
     } else {
       mx = el.x + el.w / 2;
       my = el.y + el.h / 2;

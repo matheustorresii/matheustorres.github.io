@@ -5,10 +5,26 @@ import {
   curveControl,
   curvePointAt,
   distPointToSegment,
+  elbowPoints,
   pointInBox,
   rotateAround,
   type Pt,
 } from "./geometry";
+
+function hasFill(el: Element): boolean {
+  return "fillColor" in el && el.fillColor !== "" && el.fillColor !== "transparent";
+}
+
+/** Distance from p to the nearest edge of a polyline/polygon. */
+function distToEdges(p: Pt, pts: Pt[], closed: boolean): number {
+  let best = Infinity;
+  const n = pts.length;
+  const last = closed ? n : n - 1;
+  for (let i = 0; i < last; i++) {
+    best = Math.min(best, distPointToSegment(p, pts[i], pts[(i + 1) % n]));
+  }
+  return best;
+}
 
 /**
  * Return the topmost element (highest zIndex) hit by world point p.
@@ -30,39 +46,60 @@ export function hitTest(
 function hitOne(el: Element, p: Pt, tol: number): boolean {
   // undo the element's rotation so we can test against its axis-aligned box
   if (el.rotation) p = rotateAround(p, boxCenter(aabb(el)), -el.rotation);
+  const border = tol + ("strokeWidth" in el ? el.strokeWidth : 2);
   switch (el.type) {
-    case "rectangle":
     case "text":
     case "image":
     case "icon":
       return pointInBox(p, aabb(el), tol);
+    case "rectangle": {
+      const b = aabb(el);
+      if (hasFill(el) || el.label) return pointInBox(p, b, tol);
+      const pts = [
+        { x: b.x, y: b.y },
+        { x: b.x + b.w, y: b.y },
+        { x: b.x + b.w, y: b.y + b.h },
+        { x: b.x, y: b.y + b.h },
+      ];
+      return distToEdges(p, pts, true) <= border;
+    }
     case "ellipse": {
       const cx = el.x + el.w / 2;
       const cy = el.y + el.h / 2;
-      const rx = Math.abs(el.w / 2) + tol;
-      const ry = Math.abs(el.h / 2) + tol;
+      const rx = Math.abs(el.w / 2);
+      const ry = Math.abs(el.h / 2);
       if (rx === 0 || ry === 0) return false;
-      const dx = (p.x - cx) / rx;
-      const dy = (p.y - cy) / ry;
-      return dx * dx + dy * dy <= 1;
+      const d = Math.hypot((p.x - cx) / rx, (p.y - cy) / ry); // 1 on the boundary
+      if (hasFill(el) || el.label) return d <= 1 + tol / Math.min(rx, ry);
+      return Math.abs(d - 1) <= border / Math.min(rx, ry);
     }
     case "diamond": {
       const cx = el.x + el.w / 2;
       const cy = el.y + el.h / 2;
-      const rx = Math.abs(el.w / 2) + tol;
-      const ry = Math.abs(el.h / 2) + tol;
+      const rx = Math.abs(el.w / 2);
+      const ry = Math.abs(el.h / 2);
       if (rx === 0 || ry === 0) return false;
-      return Math.abs(p.x - cx) / rx + Math.abs(p.y - cy) / ry <= 1;
+      if (hasFill(el) || el.label)
+        return Math.abs(p.x - cx) / (rx + tol) + Math.abs(p.y - cy) / (ry + tol) <= 1;
+      const pts = [
+        { x: cx, y: el.y },
+        { x: el.x + el.w, y: cy },
+        { x: cx, y: el.y + el.h },
+        { x: el.x, y: cy },
+      ];
+      return distToEdges(p, pts, true) <= border;
     }
     case "line":
     case "arrow": {
       const { a, b, c } = curveControl(el);
-      if (!c) return distPointToSegment(p, a, b) <= tol + el.strokeWidth;
+      const w = tol + el.strokeWidth;
+      if (el.elbow) return distToEdges(p, elbowPoints(a, b), false) <= w;
+      if (!c) return distPointToSegment(p, a, b) <= w;
       // sample the quadratic curve and test the nearest sub-segment
       let prev = a;
       for (let i = 1; i <= 12; i++) {
         const cur = curvePointAt(a, b, c, i / 12);
-        if (distPointToSegment(p, prev, cur) <= tol + el.strokeWidth) return true;
+        if (distPointToSegment(p, prev, cur) <= w) return true;
         prev = cur;
       }
       return false;

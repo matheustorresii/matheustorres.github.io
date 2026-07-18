@@ -126,6 +126,38 @@ export function curvePointAt(a: Pt, b: Pt, c: Pt | null, t: number): Pt {
   };
 }
 
+/** Orthogonal (right-angle) polyline from a to b, routed along the dominant axis. */
+export function elbowPoints(a: Pt, b: Pt): Pt[] {
+  const dx = Math.abs(b.x - a.x);
+  const dy = Math.abs(b.y - a.y);
+  if (dx >= dy) {
+    const mx = (a.x + b.x) / 2;
+    return [a, { x: mx, y: a.y }, { x: mx, y: b.y }, b];
+  }
+  const my = (a.y + b.y) / 2;
+  return [a, { x: a.x, y: my }, { x: b.x, y: my }, b];
+}
+
+/** The visual midpoint of a line/arrow (curve/elbow aware) for labels & handles. */
+export function connectorMidpoint(el: {
+  x: number;
+  y: number;
+  points: Pt[];
+  bend?: number;
+  elbow?: boolean;
+}): Pt {
+  const p0 = el.points[0];
+  const p1 = el.points[el.points.length - 1];
+  const a = { x: el.x + p0.x, y: el.y + p0.y };
+  const b = { x: el.x + p1.x, y: el.y + p1.y };
+  if (el.elbow) {
+    const pts = elbowPoints(a, b);
+    return { x: (pts[1].x + pts[2].x) / 2, y: (pts[1].y + pts[2].y) / 2 };
+  }
+  const { c } = curveControl(el);
+  return curvePointAt(a, b, c, 0.5);
+}
+
 /** Rotate point p around center c by angle (radians). */
 export function rotateAround(p: Pt, c: Pt, angle: number): Pt {
   const cos = Math.cos(angle);

@@ -29,6 +29,7 @@ export interface SelInfo {
   rounded: boolean;
   lang: string;
   align: "left" | "center" | "right";
+  routing: "straight" | "curve" | "elbow";
 }
 
 interface UiMirror {
@@ -173,6 +174,14 @@ export function Workspace({ route }: { route: Route }) {
             rounded: !!el.rounded,
             lang: el.type === "text" ? (el.lang ?? "typescript") : "typescript",
             align: el.type === "text" ? (el.align ?? "left") : "left",
+            routing:
+              el.type === "arrow" || el.type === "line"
+                ? el.elbow
+                  ? "elbow"
+                  : el.bend
+                    ? "curve"
+                    : "straight"
+                : "straight",
           };
         }
       }
@@ -257,6 +266,8 @@ export function Workspace({ route }: { route: Route }) {
     setStyleStore(patch);
     rootRef.current?.setStyle(patch);
   };
+  const handleRouting = (mode: "straight" | "curve" | "elbow") =>
+    rootRef.current?.setRouting(mode);
   const handleUndo = () => rootRef.current?.undo();
   const handleRedo = () => rootRef.current?.redo();
   const toggleTheme = () => {
@@ -379,6 +390,7 @@ export function Workspace({ route }: { route: Route }) {
               open={styleOpen}
               onStyle={handleStyle}
               onMono={(on) => rootRef.current?.setTextMono(on)}
+              onRouting={handleRouting}
             />
             <div className="zoom-pill">
               <button onClick={() => handleZoom(1 / 1.2)} title="Zoom out">
