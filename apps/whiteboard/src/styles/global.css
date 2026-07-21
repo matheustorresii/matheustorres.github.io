@@ -520,6 +520,13 @@ button:focus-visible {
   padding: 1px 4px;
   text-transform: lowercase;
 }
+.aws-badge.dev-badge {
+  background: #16a34a;
+}
+/* dev-tool logos ship as white tiles — keep them white on hover in both themes */
+.aws-item img {
+  border-radius: 6px;
+}
 .aws-chevron {
   margin-left: auto;
   color: var(--muted);

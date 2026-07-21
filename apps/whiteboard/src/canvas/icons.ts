@@ -3,10 +3,12 @@
 // element color; a couple of icons add a subtle fill.
 
 import { getImage } from "./imageCache";
-import { awsSvgDataUri } from "./awsIconSvg";
+import { isSvgIcon, svgIconDataUri } from "./svgIcons";
 
 /** id prefix for official AWS service icons, e.g. "aws-svc:ec2". */
 export const AWS_SVC_PREFIX = "aws-svc:";
+/** id prefix for dev-ecosystem tool icons, e.g. "dev:redis". */
+export const DEV_PREFIX = "dev:";
 
 type IconFn = (ctx: CanvasRenderingContext2D) => void;
 
@@ -356,10 +358,10 @@ export function drawIconArt(
   color: string,
   opacity: number,
 ): void {
-  // Official AWS service icon: draw the cached SVG bitmap, or a placeholder
-  // rounded square while its data chunk / image is still loading.
-  if (iconId.startsWith(AWS_SVC_PREFIX)) {
-    const uri = awsSvgDataUri(iconId.slice(AWS_SVC_PREFIX.length));
+  // SVG-library icon (AWS official / dev tools): draw the cached SVG bitmap, or
+  // a placeholder rounded square while its data chunk / image is still loading.
+  if (isSvgIcon(iconId)) {
+    const uri = svgIconDataUri(iconId);
     const img = uri ? getImage(uri) : null;
     ctx.save();
     ctx.globalAlpha = opacity;

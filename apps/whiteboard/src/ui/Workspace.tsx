@@ -521,6 +521,18 @@ function TextOverlay({
   const screen = worldToScreen(v, { x: req.worldX, y: req.worldY });
   const pad = mono ? 10 * v.scale : 0;
 
+  // Mirror the canvas: default strokes flip with the theme, and the label
+  // bubble is light on the light theme (was hard-coded dark → invisible text).
+  const isLight = document.documentElement.dataset.theme === "light";
+  const adaptColor = (c: string) =>
+    isLight && c === STROKE_DARK
+      ? STROKE_LIGHT
+      : !isLight && c === STROKE_LIGHT
+        ? STROKE_DARK
+        : c;
+  const displayColor = mono ? color : adaptColor(color);
+  const labelBg = isLight ? "#fbfcf6" : "#0f120b";
+
   // Escape, Ctrl/Cmd+Enter and clicking away COMMIT — using the live style for
   // new text. Guarded against the unmount-triggered blur committing twice.
   const commit = () => {
@@ -564,11 +576,11 @@ function TextOverlay({
         left: screen.x,
         top: screen.y,
         fontSize: fontSize * v.scale,
-        color: color,
+        color: displayColor,
         fontFamily: mono ? "ui-monospace, monospace" : "Inter, sans-serif",
         padding: pad,
         background:
-          req.targetKind === "label" ? "#0f120b" : mono ? "#282c34" : "transparent",
+          req.targetKind === "label" ? labelBg : mono ? "#282c34" : "transparent",
         boxSizing: "border-box",
         whiteSpace: req.autoWidth ? "pre" : "pre-wrap",
         overflow: "hidden",

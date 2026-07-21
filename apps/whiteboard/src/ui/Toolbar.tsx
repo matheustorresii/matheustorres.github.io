@@ -1,7 +1,12 @@
 import { useEffect, useRef, useState, type JSX, type Ref } from "react";
 import type { Tool } from "../types/model";
-import { ICON_IDS, ICON_LABELS, drawIconArt } from "../canvas/icons";
-import { AwsPicker } from "./AwsPicker";
+import { AWS_SVC_PREFIX, DEV_PREFIX, ICON_IDS, ICON_LABELS, drawIconArt } from "../canvas/icons";
+import { IconLibraryModal } from "./IconLibraryModal";
+import { AWS_ICONS, AWS_CATEGORIES } from "../canvas/awsIcons";
+import { DEV_ICONS, DEV_CATEGORIES } from "../canvas/devIcons";
+
+const loadAws = () => import("../canvas/awsIconData").then((m) => m.AWS_SVG);
+const loadDev = () => import("../canvas/devIconData").then((m) => m.DEV_SVG);
 
 function IconThumb({ id, size = 24, color }: { id: string; size?: number; color: string }) {
   const ref = useRef<HTMLCanvasElement>(null);
@@ -22,11 +27,13 @@ function IconThumb({ id, size = 24, color }: { id: string; size?: number; color:
 function IconPicker({
   onPick,
   onOpenAws,
+  onOpenDev,
   iconColor,
   rootRef,
 }: {
   onPick: (id: string) => void;
   onOpenAws: () => void;
+  onOpenDev: () => void;
   iconColor: string;
   rootRef: Ref<HTMLDivElement>;
 }) {
@@ -47,6 +54,11 @@ function IconPicker({
       <button className="aws-open-btn" onClick={onOpenAws}>
         <span className="aws-badge">aws</span>
         Ícones AWS oficiais
+        <span className="aws-chevron">›</span>
+      </button>
+      <button className="aws-open-btn" onClick={onOpenDev}>
+        <span className="aws-badge dev-badge">dev</span>
+        Ferramentas &amp; stacks
         <span className="aws-chevron">›</span>
       </button>
     </div>
@@ -134,7 +146,7 @@ export function Toolbar({
   onPickIcon: (id: string) => void;
 }) {
   const [pickerOpen, setPickerOpen] = useState(false);
-  const [awsOpen, setAwsOpen] = useState(false);
+  const [lib, setLib] = useState<"aws" | "dev" | null>(null);
   const iconColor = theme === "light" ? "#1b1e12" : "#e8ecd9";
   const iconBtnRef = useRef<HTMLButtonElement>(null);
   const pickerRef = useRef<HTMLDivElement>(null);
@@ -220,17 +232,40 @@ export function Toolbar({
           onPickIcon(id);
           setPickerOpen(false);
         }}
-        onOpenAws={() => setAwsOpen(true)}
+        onOpenAws={() => setLib("aws")}
+        onOpenDev={() => setLib("dev")}
       />
     )}
-    {awsOpen && (
-      <AwsPicker
+    {lib === "aws" && (
+      <IconLibraryModal
+        title="Ícones AWS"
+        placeholder="Buscar serviço…"
+        icons={AWS_ICONS}
+        categories={AWS_CATEGORIES}
+        prefix={AWS_SVC_PREFIX}
+        loadData={loadAws}
         onPick={(id) => {
           onPickIcon(id);
-          setAwsOpen(false);
+          setLib(null);
           setPickerOpen(false);
         }}
-        onClose={() => setAwsOpen(false)}
+        onClose={() => setLib(null)}
+      />
+    )}
+    {lib === "dev" && (
+      <IconLibraryModal
+        title="Ferramentas & stacks"
+        placeholder="Buscar (Redis, Kafka, Go…)"
+        icons={DEV_ICONS}
+        categories={DEV_CATEGORIES}
+        prefix={DEV_PREFIX}
+        loadData={loadDev}
+        onPick={(id) => {
+          onPickIcon(id);
+          setLib(null);
+          setPickerOpen(false);
+        }}
+        onClose={() => setLib(null)}
       />
     )}
     </>

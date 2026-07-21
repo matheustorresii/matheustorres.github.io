@@ -1,13 +1,29 @@
 import { useEffect, useMemo, useState } from "react";
-import { AWS_ICONS, AWS_CATEGORIES } from "../canvas/awsIcons";
-import { AWS_SVC_PREFIX } from "../canvas/icons";
 
-// Modal to browse & pick an official AWS service icon. The bulky SVG data is
-// loaded on demand (dynamic import) the first time the modal opens.
-export function AwsPicker({
+export interface LibIcon {
+  id: string;
+  label: string;
+  category: string;
+}
+
+// Generic modal to browse & pick an SVG-library icon (AWS services, dev tools).
+// The bulky SVG data is loaded on demand (dynamic import) when the modal opens.
+export function IconLibraryModal({
+  title,
+  placeholder,
+  icons,
+  categories,
+  prefix,
+  loadData,
   onPick,
   onClose,
 }: {
+  title: string;
+  placeholder: string;
+  icons: LibIcon[];
+  categories: string[];
+  prefix: string; // iconId prefix, e.g. "aws-svc:" or "dev:"
+  loadData: () => Promise<Record<string, string>>;
   onPick: (iconId: string) => void;
   onClose: () => void;
 }) {
@@ -17,22 +33,22 @@ export function AwsPicker({
 
   useEffect(() => {
     let alive = true;
-    void import("../canvas/awsIconData").then((m) => {
-      if (alive) setSvg(m.AWS_SVG);
+    void loadData().then((m) => {
+      if (alive) setSvg(m);
     });
     return () => {
       alive = false;
     };
-  }, []);
+  }, [loadData]);
 
   const list = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return AWS_ICONS.filter(
+    return icons.filter(
       (i) =>
         (!cat || i.category === cat) &&
         (!q || i.label.toLowerCase().includes(q) || i.category.toLowerCase().includes(q)),
     );
-  }, [query, cat]);
+  }, [query, cat, icons]);
 
   const uri = (id: string) =>
     svg && svg[id] ? "data:image/svg+xml," + encodeURIComponent(svg[id]) : "";
@@ -41,12 +57,12 @@ export function AwsPicker({
     <div className="overlay" onClick={onClose}>
       <div className="aws-picker" onClick={(e) => e.stopPropagation()}>
         <div className="aws-picker-head">
-          <strong>Ícones AWS</strong>
+          <strong>{title}</strong>
           <span className="aws-picker-count">{list.length}</span>
           <input
             autoFocus
             className="aws-search"
-            placeholder="Buscar serviço…"
+            placeholder={placeholder}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
@@ -61,7 +77,7 @@ export function AwsPicker({
           >
             Todos
           </button>
-          {AWS_CATEGORIES.map((c) => (
+          {categories.map((c) => (
             <button
               key={c}
               className={`aws-cat ${cat === c ? "active" : ""}`}
@@ -79,7 +95,7 @@ export function AwsPicker({
                 key={i.id}
                 className="aws-item"
                 title={`${i.label} · ${i.category}`}
-                onClick={() => onPick(AWS_SVC_PREFIX + i.id)}
+                onClick={() => onPick(prefix + i.id)}
               >
                 <img src={uri(i.id)} alt={i.label} width={40} height={40} draggable={false} />
                 <span>{i.label}</span>
