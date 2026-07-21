@@ -5,7 +5,7 @@ import { History } from "../commands/History";
 import { draw } from "./Renderer";
 import { InputController } from "./InputController";
 import { MAX_SCALE, MIN_SCALE, zoomAt } from "./viewport";
-import { clamp } from "./geometry";
+import { aabb, clamp, setBoxResolver } from "./geometry";
 import { setImageRedrawHandler } from "./imageCache";
 import { setSvgReadyHandler } from "./svgIcons";
 
@@ -70,6 +70,10 @@ export class CanvasRoot {
     this.scene.changed.subscribe(() => this.onUiSync?.());
     setImageRedrawHandler(() => this.scene.markDirty());
     setSvgReadyHandler(() => this.scene.markDirty());
+    setBoxResolver((id) => {
+      const el = this.scene.get(id);
+      return el ? aabb(el) : null;
+    });
 
     this.input = new InputController(this);
 

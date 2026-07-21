@@ -11,7 +11,7 @@ import type {
 import { getImage } from "./imageCache";
 import { drawIconArt } from "./icons";
 import { colorFor, tokenizeLines } from "./highlight";
-import { connectorMidpoint, curveControl, elbowPoints } from "./geometry";
+import { connectorMidpoint, curveControl, elbowRouteForEl } from "./geometry";
 import { STROKE_DARK, STROKE_LIGHT } from "../theme";
 
 // The two theme-default stroke colors flip with the theme so default-colored
@@ -139,7 +139,7 @@ export function drawLine(ctx: CanvasRenderingContext2D, el: LineElement): void {
   ctx.beginPath();
   ctx.moveTo(a.x, a.y);
   if (el.elbow) {
-    const pts = elbowPoints(a, b);
+    const pts = elbowRouteForEl(el);
     for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
   } else if (c) ctx.quadraticCurveTo(c.x, c.y, b.x, b.y);
   else ctx.lineTo(b.x, b.y);
@@ -153,7 +153,7 @@ export function drawArrow(ctx: CanvasRenderingContext2D, el: ArrowElement): void
   ctx.moveTo(a.x, a.y);
   let from = a; // point just before the end, for the arrowhead angle
   if (el.elbow) {
-    const pts = elbowPoints(a, b);
+    const pts = elbowRouteForEl(el);
     for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
     from = pts[pts.length - 2];
   } else if (c) {

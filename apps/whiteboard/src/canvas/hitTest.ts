@@ -5,7 +5,7 @@ import {
   curveControl,
   curvePointAt,
   distPointToSegment,
-  elbowPoints,
+  elbowRouteForEl,
   pointInBox,
   rotateAround,
   type Pt,
@@ -93,7 +93,7 @@ function hitOne(el: Element, p: Pt, tol: number): boolean {
     case "arrow": {
       const { a, b, c } = curveControl(el);
       const w = tol + el.strokeWidth;
-      if (el.elbow) return distToEdges(p, elbowPoints(a, b), false) <= w;
+      if (el.elbow) return distToEdges(p, elbowRouteForEl(el), false) <= w;
       if (!c) return distPointToSegment(p, a, b) <= w;
       // sample the quadratic curve and test the nearest sub-segment
       let prev = a;

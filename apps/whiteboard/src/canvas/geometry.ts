@@ -138,6 +138,107 @@ export function elbowPoints(a: Pt, b: Pt): Pt[] {
   return [a, { x: a.x, y: my }, { x: b.x, y: my }, b];
 }
 
+// The renderer/hit-test need each bound target's box to route elbow arrows so
+// they leave/enter perpendicular to the anchored edge. Registered by the canvas.
+let boxResolver: (id: string) => Box | null = () => null;
+export function setBoxResolver(fn: (id: string) => Box | null): void {
+  boxResolver = fn;
+}
+
+/** Outward axis-aligned unit normal of the box edge nearest to point p. */
+function outwardNormal(p: Pt, box: Box): Pt {
+  const cx = clamp(p.x, box.x, box.x + box.w);
+  const cy = clamp(p.y, box.y, box.y + box.h);
+  const dx = p.x - cx;
+  const dy = p.y - cy;
+  if (dx === 0 && dy === 0) {
+    // p is inside the box — fall back to the direction from the box center
+    const ux = p.x - (box.x + box.w / 2);
+    const uy = p.y - (box.y + box.h / 2);
+    return Math.abs(ux) >= Math.abs(uy)
+      ? { x: Math.sign(ux) || 1, y: 0 }
+      : { x: 0, y: Math.sign(uy) || 1 };
+  }
+  return Math.abs(dx) >= Math.abs(dy)
+    ? { x: Math.sign(dx), y: 0 }
+    : { x: 0, y: Math.sign(dy) };
+}
+
+/** Intermediate right-angle corners between two ports leaving along p/qdir. */
+function orthoConnect(p: Pt, pdir: Pt, q: Pt, qdir: Pt): Pt[] {
+  const pv = pdir.x === 0; // leaves vertically
+  const qv = qdir.x === 0;
+  if (pv && qv) {
+    const runY =
+      Math.sign(pdir.y) === Math.sign(qdir.y)
+        ? pdir.y < 0
+          ? Math.min(p.y, q.y)
+          : Math.max(p.y, q.y)
+        : (p.y + q.y) / 2;
+    return [
+      { x: p.x, y: runY },
+      { x: q.x, y: runY },
+    ];
+  }
+  if (!pv && !qv) {
+    const runX =
+      Math.sign(pdir.x) === Math.sign(qdir.x)
+        ? pdir.x < 0
+          ? Math.min(p.x, q.x)
+          : Math.max(p.x, q.x)
+        : (p.x + q.x) / 2;
+    return [
+      { x: runX, y: p.y },
+      { x: runX, y: q.y },
+    ];
+  }
+  return pv ? [{ x: p.x, y: q.y }] : [{ x: q.x, y: p.y }];
+}
+
+/** Orthogonal route that leaves a along aDir and arrives at b along -bDir. */
+export function elbowRoute(a: Pt, b: Pt, aDir: Pt | null, bDir: Pt | null): Pt[] {
+  const tdx = b.x - a.x;
+  const tdy = b.y - a.y;
+  const domTo = (dx: number, dy: number): Pt =>
+    Math.abs(dx) >= Math.abs(dy)
+      ? { x: Math.sign(dx) || 1, y: 0 }
+      : { x: 0, y: Math.sign(dy) || 1 };
+  const ea = aDir ?? domTo(tdx, tdy);
+  const eb = bDir ?? domTo(-tdx, -tdy);
+  const dist = Math.hypot(tdx, tdy);
+  const stub = Math.max(6, Math.min(22, dist * 0.25));
+  const a1 = aDir ? { x: a.x + ea.x * stub, y: a.y + ea.y * stub } : a;
+  const b1 = bDir ? { x: b.x + eb.x * stub, y: b.y + eb.y * stub } : b;
+  const corners = orthoConnect(a1, ea, b1, eb);
+  const raw = [a, ...(aDir ? [a1] : []), ...corners, ...(bDir ? [b1] : []), b];
+  // drop consecutive duplicate points so the arrowhead angle stays well-defined
+  const out: Pt[] = [];
+  for (const p of raw) {
+    const last = out[out.length - 1];
+    if (!last || Math.hypot(p.x - last.x, p.y - last.y) > 0.01) out.push(p);
+  }
+  return out.length >= 2 ? out : [a, b];
+}
+
+/** Elbow polyline for a connector, perpendicular to any bound edges. */
+export function elbowRouteForEl(el: {
+  x: number;
+  y: number;
+  points: Pt[];
+  boundStart?: { elementId: string };
+  boundEnd?: { elementId: string };
+}): Pt[] {
+  const p0 = el.points[0];
+  const p1 = el.points[el.points.length - 1];
+  const a = { x: el.x + p0.x, y: el.y + p0.y };
+  const b = { x: el.x + p1.x, y: el.y + p1.y };
+  const boxA = el.boundStart ? boxResolver(el.boundStart.elementId) : null;
+  const boxB = el.boundEnd ? boxResolver(el.boundEnd.elementId) : null;
+  const aDir = boxA ? outwardNormal(a, boxA) : null;
+  const bDir = boxB ? outwardNormal(b, boxB) : null;
+  return elbowRoute(a, b, aDir, bDir);
+}
+
 /** The visual midpoint of a line/arrow (curve/elbow aware) for labels & handles. */
 export function connectorMidpoint(el: {
   x: number;
@@ -145,14 +246,35 @@ export function connectorMidpoint(el: {
   points: Pt[];
   bend?: number;
   elbow?: boolean;
+  boundStart?: { elementId: string };
+  boundEnd?: { elementId: string };
 }): Pt {
   const p0 = el.points[0];
   const p1 = el.points[el.points.length - 1];
   const a = { x: el.x + p0.x, y: el.y + p0.y };
   const b = { x: el.x + p1.x, y: el.y + p1.y };
   if (el.elbow) {
-    const pts = elbowPoints(a, b);
-    return { x: (pts[1].x + pts[2].x) / 2, y: (pts[1].y + pts[2].y) / 2 };
+    const pts = elbowRouteForEl(el);
+    // midpoint by arc length so the label sits on the visual middle
+    let total = 0;
+    const segs: number[] = [];
+    for (let i = 1; i < pts.length; i++) {
+      const d = Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y);
+      segs.push(d);
+      total += d;
+    }
+    let acc = 0;
+    for (let i = 0; i < segs.length; i++) {
+      if (acc + segs[i] >= total / 2) {
+        const t = segs[i] === 0 ? 0 : (total / 2 - acc) / segs[i];
+        return {
+          x: pts[i].x + (pts[i + 1].x - pts[i].x) * t,
+          y: pts[i].y + (pts[i + 1].y - pts[i].y) * t,
+        };
+      }
+      acc += segs[i];
+    }
+    return b;
   }
   const { c } = curveControl(el);
   return curvePointAt(a, b, c, 0.5);

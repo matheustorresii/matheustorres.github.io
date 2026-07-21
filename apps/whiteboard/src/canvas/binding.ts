@@ -2,6 +2,7 @@ import type { ArrowElement, Binding, Element } from "../types/model";
 import { aabb, type Pt } from "./geometry";
 
 export const BIND_THRESHOLD = 16; // world units
+export const BIND_GAP = 8; // world-unit breathing room between an arrow tip and the shape
 
 /** Find a shape whose border is within threshold of world point p. */
 export function findBindTarget(
@@ -49,7 +50,7 @@ export function makeBinding(target: Element, p: Pt): Binding {
     elementId: target.id,
     focusX: Math.min(1, Math.max(0, focusX)),
     focusY: Math.min(1, Math.max(0, focusY)),
-    gap: 4,
+    gap: BIND_GAP,
   };
 }
 
@@ -66,9 +67,12 @@ export function resolveBinding(binding: Binding, target: Element): Pt {
   const scaleX = dx !== 0 ? b.w / 2 / Math.abs(dx) : Infinity;
   const scaleY = dy !== 0 ? b.h / 2 / Math.abs(dy) : Infinity;
   const s = Math.min(scaleX, scaleY);
+  // push the tip out along the edge normal so it never buries into the shape
+  const gap = Math.max(binding.gap, BIND_GAP);
+  const onX = scaleX <= scaleY; // hit a left/right edge → gap along x, else along y
   return {
-    x: center.x + dx * s + Math.sign(dx) * binding.gap,
-    y: center.y + dy * s + Math.sign(dy) * binding.gap,
+    x: center.x + dx * s + (onX ? Math.sign(dx) * gap : 0),
+    y: center.y + dy * s + (onX ? 0 : Math.sign(dy) * gap),
   };
 }
 
