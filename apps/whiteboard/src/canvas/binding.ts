@@ -9,22 +9,35 @@ export function findBindTarget(
   p: Pt,
   excludeId: string,
 ): Element | null {
-  let best: Element | null = null;
-  let bestDist = BIND_THRESHOLD;
+  // Prefer a shape that CONTAINS the point (smallest one wins, so an icon inside
+  // a box binds to the icon, not the wrapping box). Fall back to the nearest
+  // border within threshold when the point is outside every shape.
+  let contained: Element | null = null;
+  let containedArea = Infinity;
+  let nearest: Element | null = null;
+  let nearestDist = BIND_THRESHOLD;
   for (const el of elements) {
     if (el.id === excludeId) continue;
     if (el.type === "line" || el.type === "arrow" || el.type === "freehand") continue;
     const b = aabb(el);
-    // distance from p to the box (0 if inside)
     const dx = Math.max(b.x - p.x, 0, p.x - (b.x + b.w));
     const dy = Math.max(b.y - p.y, 0, p.y - (b.y + b.h));
     const d = Math.hypot(dx, dy);
-    if (d <= bestDist) {
-      bestDist = d;
-      best = el;
+    if (d === 0) {
+      const area = b.w * b.h;
+      if (
+        area < containedArea ||
+        (area === containedArea && (!contained || el.zIndex > contained.zIndex))
+      ) {
+        contained = el;
+        containedArea = area;
+      }
+    } else if (d <= nearestDist) {
+      nearestDist = d;
+      nearest = el;
     }
   }
-  return best;
+  return contained ?? nearest;
 }
 
 /** Build a binding descriptor for point p relative to target's AABB. */

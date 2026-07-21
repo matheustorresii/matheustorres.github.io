@@ -364,6 +364,7 @@ export function Workspace({ route }: { route: Route }) {
           <>
             <Toolbar
               tool={tool}
+              theme={theme}
               canUndo={ui.canUndo}
               canRedo={ui.canRedo}
               snap={snap}
@@ -536,10 +537,11 @@ function TextOverlay({
       defaultValue={req.initial}
       onInput={autosize}
       onBlur={(e) => {
-        // Clicking the style panel/toolbar must NOT commit — the user is
-        // adjusting font/mono for this very text. Keep the overlay open.
+        // Clicking the style panel must NOT commit — the user is adjusting
+        // font/color/mono for this very text. Anything else (the toolbar, the
+        // canvas, chrome) commits and closes the editor.
         const rt = e.relatedTarget as HTMLElement | null;
-        if (rt && rt.closest(".style-panel, .toolbar")) return;
+        if (rt && rt.closest(".style-panel")) return;
         commit();
       }}
       onKeyDown={(e) => {

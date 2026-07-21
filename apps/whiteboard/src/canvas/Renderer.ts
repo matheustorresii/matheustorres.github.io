@@ -123,8 +123,10 @@ function drawDotGrid(
   if (step < 10) return; // too dense when zoomed far out — skip
   const ox = (v.offsetX * dpr) % step;
   const oy = (v.offsetY * dpr) % step;
-  const r = Math.max(1, dpr * 0.8);
-  ctx.fillStyle = "rgba(172, 213, 44, 0.10)"; // faint neon
+  const r = Math.max(1, dpr * 0.9);
+  const light = document.documentElement.dataset.theme === "light";
+  // light theme needs a darker, denser dot to read against the near-white canvas
+  ctx.fillStyle = light ? "rgba(60, 74, 20, 0.35)" : "rgba(172, 213, 44, 0.12)";
   for (let x = ox; x < cssW * dpr; x += step) {
     for (let y = oy; y < cssH * dpr; y += step) {
       ctx.beginPath();
@@ -140,12 +142,46 @@ function drawSelection(
   scale: number,
   withHandles: boolean,
 ): void {
-  const b = selectionBox(el);
   ctx.save();
   ctx.globalAlpha = 1;
   ctx.strokeStyle = SELECTION_COLOR;
   ctx.lineWidth = 1 / scale;
 
+  // Connectors (line/arrow) are edited point-by-point, not as a box: draw
+  // endpoint handles + a midpoint bend handle, with no bounding frame.
+  if (el.type === "line" || el.type === "arrow") {
+    const g = curveControl(el);
+    const hr = (HANDLE_SCREEN_SIZE / 2 + 1) / scale;
+    if (withHandles) {
+      ctx.fillStyle = "#0f120b";
+      for (const p of [g.a, g.b]) {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, hr, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+      }
+      if (!el.elbow) {
+        const mid = curvePointAt(g.a, g.b, g.c, 0.5);
+        ctx.beginPath();
+        ctx.arc(mid.x, mid.y, hr, 0, Math.PI * 2);
+        ctx.fillStyle = SELECTION_COLOR;
+        ctx.fill();
+        ctx.stroke();
+      }
+    } else {
+      // part of a multi-selection: mark the endpoints subtly
+      ctx.fillStyle = SELECTION_COLOR;
+      for (const p of [g.a, g.b]) {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, hr * 0.7, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    ctx.restore();
+    return;
+  }
+
+  const b = selectionBox(el);
   // rotate the whole overlay around the element center so it hugs the element
   if (el.rotation) {
     const cx = b.x + b.w / 2;
@@ -181,18 +217,6 @@ function drawSelection(
     ctx.fillStyle = SELECTION_COLOR;
     ctx.fill();
     ctx.stroke();
-
-    // bend handle at the midpoint of a line/arrow (drag it to curve the shape).
-    // elbow-routed connectors have fixed right angles, so no bend handle.
-    if ((el.type === "line" || el.type === "arrow") && !el.elbow) {
-      const g = curveControl(el);
-      const mid = curvePointAt(g.a, g.b, g.c, 0.5);
-      ctx.beginPath();
-      ctx.arc(mid.x, mid.y, (HANDLE_SCREEN_SIZE / 2 + 1) / scale, 0, Math.PI * 2);
-      ctx.fillStyle = SELECTION_COLOR;
-      ctx.fill();
-      ctx.stroke();
-    }
   }
   ctx.restore();
 }

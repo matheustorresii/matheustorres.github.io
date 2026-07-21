@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState, type JSX } from "react";
+import { useEffect, useRef, useState, type JSX, type Ref } from "react";
 import type { Tool } from "../types/model";
 import { ICON_IDS, ICON_LABELS, drawIconArt } from "../canvas/icons";
 import { AwsPicker } from "./AwsPicker";
 
-function IconThumb({ id, size = 24 }: { id: string; size?: number }) {
+function IconThumb({ id, size = 24, color }: { id: string; size?: number; color: string }) {
   const ref = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
     const c = ref.current;
@@ -14,17 +14,21 @@ function IconThumb({ id, size = 24 }: { id: string; size?: number }) {
     const ctx = c.getContext("2d")!;
     ctx.scale(dpr, dpr);
     ctx.clearRect(0, 0, size, size);
-    drawIconArt(ctx, id, 2, 2, size - 4, size - 4, "#e8ecd9", 1);
-  }, [id, size]);
+    drawIconArt(ctx, id, 2, 2, size - 4, size - 4, color, 1);
+  }, [id, size, color]);
   return <canvas ref={ref} style={{ width: size, height: size }} />;
 }
 
 function IconPicker({
   onPick,
   onOpenAws,
+  iconColor,
+  rootRef,
 }: {
   onPick: (id: string) => void;
   onOpenAws: () => void;
+  iconColor: string;
+  rootRef: Ref<HTMLDivElement>;
 }) {
   const cell = (id: string) => (
     <button
@@ -33,11 +37,11 @@ function IconPicker({
       title={ICON_LABELS[id] ?? id}
       onClick={() => onPick(id)}
     >
-      <IconThumb id={id} />
+      <IconThumb id={id} color={iconColor} />
     </button>
   );
   return (
-    <div className="icon-picker">
+    <div className="icon-picker" ref={rootRef}>
       <div className="icon-group-label">Genéricos</div>
       <div className="icon-grid">{ICON_IDS.map(cell)}</div>
       <button className="aws-open-btn" onClick={onOpenAws}>
@@ -108,6 +112,7 @@ const TOOLS: { id: Tool; title: string; num: number }[] = [
 
 export function Toolbar({
   tool,
+  theme,
   canUndo,
   canRedo,
   snap,
@@ -118,6 +123,7 @@ export function Toolbar({
   onPickIcon,
 }: {
   tool: Tool;
+  theme: "dark" | "light";
   canUndo: boolean;
   canRedo: boolean;
   snap: boolean;
@@ -129,6 +135,20 @@ export function Toolbar({
 }) {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [awsOpen, setAwsOpen] = useState(false);
+  const iconColor = theme === "light" ? "#1b1e12" : "#e8ecd9";
+  const iconBtnRef = useRef<HTMLButtonElement>(null);
+  const pickerRef = useRef<HTMLDivElement>(null);
+  // close the icon picker when clicking anywhere outside it (except its toggle)
+  useEffect(() => {
+    if (!pickerOpen) return;
+    const onDown = (e: PointerEvent) => {
+      const t = e.target as Node;
+      if (pickerRef.current?.contains(t) || iconBtnRef.current?.contains(t)) return;
+      setPickerOpen(false);
+    };
+    document.addEventListener("pointerdown", onDown, true);
+    return () => document.removeEventListener("pointerdown", onDown, true);
+  }, [pickerOpen]);
   return (
     <>
     <div className="toolbar">
@@ -144,6 +164,7 @@ export function Toolbar({
         </button>
       ))}
       <button
+        ref={iconBtnRef}
         className={`tool ${tool === "icon" ? "active" : ""}`}
         title="Ícones de arquitetura"
         onClick={() => setPickerOpen((o) => !o)}
@@ -193,6 +214,8 @@ export function Toolbar({
     </div>
     {pickerOpen && (
       <IconPicker
+        rootRef={pickerRef}
+        iconColor={iconColor}
         onPick={(id) => {
           onPickIcon(id);
           setPickerOpen(false);

@@ -50,6 +50,7 @@ type State =
   | "resizing"
   | "rotating"
   | "bending" // dragging a line/arrow's curve handle
+  | "endpoint" // dragging a line/arrow's start/end point (re-anchors + re-binds)
   | "marquee"
   | "gesture"; // two-finger pinch-zoom + pan (touch)
 const PICK_TOL = 6; // screen px, converted to world by /scale
@@ -78,10 +79,19 @@ interface ResizeSession {
   fixed: Pt; // opposite corner (world), stays put
   before: Element;
 }
+interface EndpointSession {
+  which: 0 | 1; // 0 = start point, 1 = end point
+  before: Element;
+}
+type PickHandle = HandleId | "rotate" | "bend" | "p0" | "p1";
 
 function clone<T>(v: T): T {
   return structuredClone(v);
 }
+
+// Written to the OS clipboard on an internal copy so the paste handler can tell
+// "this Ctrl+V is our own copy" and ignore any stale native image/text.
+const CLIP_SENTINEL = "11A3::internal-clip";
 
 export class InputController {
   private root: CanvasRoot;
@@ -92,6 +102,7 @@ export class InputController {
   private resizeS: ResizeSession | null = null;
   private rotateS: RotateSession | null = null;
   private bendS: { before: Element } | null = null;
+  private endpointS: EndpointSession | null = null;
   private marqueeS: MarqueeSession | null = null;
   private drawStart: Pt | null = null;
   private editingText = false;
@@ -135,6 +146,9 @@ export class InputController {
   // ---- paste images ----
   private onPaste = (e: ClipboardEvent): void => {
     if (this.root.readonly || this.editingText) return;
+    // Our own internal copy: the keydown Ctrl+V already pasted the elements, so
+    // don't also paste whatever native content is (or was) on the clipboard.
+    if (e.clipboardData?.getData("text") === CLIP_SENTINEL) return;
     const items = e.clipboardData?.items;
     if (!items) return;
     for (const it of items) {
@@ -235,7 +249,7 @@ export class InputController {
     return this.root.scene.viewport.scale;
   }
 
-  private handleAt(screen: Pt): HandleId | "rotate" | "bend" | null {
+  private handleAt(screen: Pt): PickHandle | null {
     const scene = this.root.scene;
     const single = scene.singleSelection;
     if (!single) return null; // handles only when exactly one is selected
@@ -254,12 +268,20 @@ export class InputController {
       };
     };
     const hit = this.touch ? HANDLE_HIT + 12 : HANDLE_HIT; // fatter for fingers
-    // bend handle (line/arrow midpoint) takes priority — it sits over the box
-    if ((el.type === "line" || el.type === "arrow") && !el.elbow) {
-      const g = curveControl(el);
-      const mid = curvePointAt(g.a, g.b, g.c, 0.5);
-      const s = toScreen(mid);
-      if (Math.hypot(s.x - screen.x, s.y - screen.y) <= hit + 2) return "bend";
+    // Connectors (line/arrow) are edited by their endpoints + midpoint, not by
+    // a bounding box — so they don't get corner-resize or rotate handles.
+    if (el.type === "line" || el.type === "arrow") {
+      const { a, b } = curveControl(el);
+      const sa = toScreen(a);
+      if (Math.hypot(sa.x - screen.x, sa.y - screen.y) <= hit + 2) return "p0";
+      const sb = toScreen(b);
+      if (Math.hypot(sb.x - screen.x, sb.y - screen.y) <= hit + 2) return "p1";
+      if (!el.elbow) {
+        const mid = curvePointAt(a, b, curveControl(el).c, 0.5);
+        const sm = toScreen(mid);
+        if (Math.hypot(sm.x - screen.x, sm.y - screen.y) <= hit + 2) return "bend";
+      }
+      return null;
     }
     for (const h of cornerHandles(padded)) {
       const s = toScreen({ x: h.x, y: h.y });
@@ -314,6 +336,12 @@ export class InputController {
         const el = scene.get(scene.singleSelection!)!;
         this.bendS = { before: clone(el) };
         this.state = "bending";
+        return;
+      }
+      if (handle === "p0" || handle === "p1") {
+        const el = scene.get(scene.singleSelection!)!;
+        this.endpointS = { which: handle === "p0" ? 0 : 1, before: clone(el) };
+        this.state = "endpoint";
         return;
       }
       if (handle === "rotate") {
@@ -493,6 +521,11 @@ export class InputController {
         this.applyBend(this.worldPt(e));
         break;
       }
+      case "endpoint": {
+        if (!this.endpointS) return;
+        this.applyEndpoint(this.worldPt(e));
+        break;
+      }
       case "marquee": {
         if (!this.marqueeS) return;
         this.applyMarquee(this.worldPt(e));
@@ -543,6 +576,68 @@ export class InputController {
     const b = (before as LineElement).bend ?? 0;
     if (a === b) return;
     this.root.history.execute(this.root.scene, updateElement(before, clone(cur)));
+  }
+
+  /** Drag one end of a line/arrow to a new position, re-binding on release. */
+  private applyEndpoint(world: Pt): void {
+    if (!this.endpointS) return;
+    const scene = this.root.scene;
+    const before = this.endpointS.before as LineElement | ArrowElement;
+    const el = scene.get(before.id) as LineElement | ArrowElement | undefined;
+    if (!el) return;
+    const p0 = before.points[0];
+    const p1 = before.points[before.points.length - 1];
+    const aAbs = { x: before.x + p0.x, y: before.y + p0.y };
+    const bAbs = { x: before.x + p1.x, y: before.y + p1.y };
+    const cursor = this.root.snapEnabled ? snapPt(world) : world;
+    let s = aAbs;
+    let epEnd = bAbs;
+    if (this.endpointS.which === 0) s = cursor;
+    else epEnd = cursor;
+    // highlight the shape the moving end would bind to
+    const target = findBindTarget(scene.all(), cursor, el.id);
+    scene.setBindHighlight(target ? target.id : null);
+    const minX = Math.min(s.x, epEnd.x);
+    const minY = Math.min(s.y, epEnd.y);
+    el.x = minX;
+    el.y = minY;
+    el.w = Math.abs(epEnd.x - s.x);
+    el.h = Math.abs(epEnd.y - s.y);
+    el.points = [
+      { x: s.x - minX, y: s.y - minY },
+      { x: epEnd.x - minX, y: epEnd.y - minY },
+    ];
+    // detach the moving end's binding while dragging (re-applied on release)
+    if (el.type === "arrow") {
+      if (this.endpointS.which === 0) (el as ArrowElement).boundStart = undefined;
+      else (el as ArrowElement).boundEnd = undefined;
+    }
+    scene.markDirty();
+  }
+
+  private commitEndpoint(): void {
+    if (!this.endpointS) return;
+    const scene = this.root.scene;
+    const before = this.endpointS.before;
+    const which = this.endpointS.which;
+    this.endpointS = null;
+    scene.setBindHighlight(null);
+    const cur = scene.get(before.id) as LineElement | ArrowElement | undefined;
+    if (!cur) return;
+    if (cur.type === "arrow") {
+      const pts = cur.points;
+      const movedAbs =
+        which === 0
+          ? { x: cur.x + pts[0].x, y: cur.y + pts[0].y }
+          : { x: cur.x + pts[pts.length - 1].x, y: cur.y + pts[pts.length - 1].y };
+      const target = findBindTarget(scene.all(), movedAbs, cur.id);
+      if (target) {
+        if (which === 0) cur.boundStart = makeBinding(target, movedAbs);
+        else cur.boundEnd = makeBinding(target, movedAbs);
+        Object.assign(cur, applyBindings(cur, (id) => scene.get(id)));
+      }
+    }
+    this.root.history.execute(scene, updateElement(before, clone(cur)));
   }
 
   private applyMarquee(world: Pt): void {
@@ -694,6 +789,9 @@ export class InputController {
       case "bending":
         this.commitBend();
         break;
+      case "endpoint":
+        this.commitEndpoint();
+        break;
       case "marquee":
         this.commitMarquee();
         break;
@@ -710,6 +808,7 @@ export class InputController {
     this.resizeS = null;
     this.rotateS = null;
     this.bendS = null;
+    this.endpointS = null;
     this.marqueeS = null;
     this.root.scene.marqueeRect = null;
     this.root.scene.setBindHighlight(null);
@@ -1245,7 +1344,15 @@ export class InputController {
 
   private copySelection(): void {
     const sel = this.root.scene.selectedElements();
-    if (sel.length) this.clipboard = sel.map((e) => clone(e));
+    if (!sel.length) return;
+    this.clipboard = sel.map((e) => clone(e));
+    // Overwrite the OS clipboard so a previously-copied native image doesn't
+    // also get pasted on Ctrl+V (the paste event would otherwise still see it).
+    try {
+      void navigator.clipboard?.writeText?.(CLIP_SENTINEL).catch(() => {});
+    } catch {
+      /* clipboard unavailable (insecure context) — internal paste still works */
+    }
   }
 
   private pasteClipboard(): void {
@@ -1307,6 +1414,7 @@ export class InputController {
     this.resizeS = null;
     this.rotateS = null;
     this.bendS = null;
+    this.endpointS = null;
     this.marqueeS = null;
     this.root.scene.marqueeRect = null;
     this.drawStart = null;
