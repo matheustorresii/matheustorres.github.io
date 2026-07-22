@@ -146,85 +146,185 @@ export function setBoxResolver(fn: (id: string) => Box | null): void {
 }
 
 const BIND_GAP = 8; // keep in sync with binding.ts (breathing room at the tip)
+const CLEAR = 18; // extra clearance kept around boxes when routing around them
+
+/** Outward axis-aligned unit normal of the box edge nearest to point p. */
+function outwardNormal(p: Pt, box: Box): Pt {
+  const cx = clamp(p.x, box.x, box.x + box.w);
+  const cy = clamp(p.y, box.y, box.y + box.h);
+  const dx = p.x - cx;
+  const dy = p.y - cy;
+  if (dx === 0 && dy === 0) {
+    const ux = p.x - (box.x + box.w / 2);
+    const uy = p.y - (box.y + box.h / 2);
+    return Math.abs(ux) >= Math.abs(uy)
+      ? { x: Math.sign(ux) || 1, y: 0 }
+      : { x: 0, y: Math.sign(uy) || 1 };
+  }
+  return Math.abs(dx) >= Math.abs(dy)
+    ? { x: Math.sign(dx), y: 0 }
+    : { x: 0, y: Math.sign(dy) };
+}
+
+function padBox(b: Box, m: number): Box {
+  return { x: b.x - m, y: b.y - m, w: b.w + 2 * m, h: b.h + 2 * m };
+}
+
+/** Does an axis-aligned segment pass through a box's open interior? */
+function segCrossesBox(p: Pt, q: Pt, box: Box): boolean {
+  const eps = 0.5;
+  const bx0 = box.x + eps;
+  const bx1 = box.x + box.w - eps;
+  const by0 = box.y + eps;
+  const by1 = box.y + box.h - eps;
+  if (p.y === q.y) {
+    // horizontal
+    if (p.y <= box.y || p.y >= box.y + box.h) return false;
+    const x0 = Math.min(p.x, q.x);
+    const x1 = Math.max(p.x, q.x);
+    return Math.min(x1, bx1) - Math.max(x0, bx0) > 0;
+  }
+  // vertical
+  if (p.x <= box.x || p.x >= box.x + box.w) return false;
+  const y0 = Math.min(p.y, q.y);
+  const y1 = Math.max(p.y, q.y);
+  return Math.min(y1, by1) - Math.max(y0, by0) > 0;
+}
+
+/** Simple mid-split elbow, used as a fallback when the router finds no path. */
+function simpleElbow(a: Pt, b: Pt): Pt[] {
+  return elbowPoints(a, b);
+}
 
 /**
- * Pick the connection point + outward normal on the box edge that FACES `target`.
- * This is what makes an elbow arrow leave/enter the side pointing at the other
- * shape (Excalidraw-style), instead of the edge the point happened to land on —
- * which is what caused routes to cut straight through a box.
+ * Orthogonal route from a→b that leaves a along aDir and enters b along -bDir,
+ * staying outside the two endpoint boxes. Solved as a shortest path (fewest
+ * bends, then shortest length) over the grid of interesting coordinates, so the
+ * arrow routes AROUND a shape instead of cutting through it — while keeping the
+ * edges the user anchored to. Excalidraw-style.
  */
-function facingConnection(box: Box, target: Pt): { point: Pt; dir: Pt } {
-  const cx = box.x + box.w / 2;
-  const cy = box.y + box.h / 2;
-  const dx = target.x - cx;
-  const dy = target.y - cy;
-  if (Math.abs(dx) >= Math.abs(dy)) {
-    const sx = dx >= 0 ? 1 : -1;
-    const ex = sx > 0 ? box.x + box.w : box.x;
-    return { point: { x: ex + sx * BIND_GAP, y: cy }, dir: { x: sx, y: 0 } };
-  }
-  const sy = dy >= 0 ? 1 : -1;
-  const ey = sy > 0 ? box.y + box.h : box.y;
-  return { point: { x: cx, y: ey + sy * BIND_GAP }, dir: { x: 0, y: sy } };
-}
+export function routeElbow(
+  a: Pt,
+  aDir: Pt,
+  b: Pt,
+  bDir: Pt,
+  boxA: Box | null,
+  boxB: Box | null,
+): Pt[] {
+  const ep = { x: a.x + aDir.x * CLEAR, y: a.y + aDir.y * CLEAR };
+  const eq = { x: b.x + bDir.x * CLEAR, y: b.y + bDir.y * CLEAR };
+  const obstacles: Box[] = [];
+  if (boxA) obstacles.push(padBox(boxA, BIND_GAP));
+  if (boxB) obstacles.push(padBox(boxB, BIND_GAP));
 
-/** Intermediate right-angle corners between two ports leaving along p/qdir. */
-function orthoConnect(p: Pt, pdir: Pt, q: Pt, qdir: Pt): Pt[] {
-  const pv = pdir.x === 0; // leaves vertically
-  const qv = qdir.x === 0;
-  if (pv && qv) {
-    const runY =
-      Math.sign(pdir.y) === Math.sign(qdir.y)
-        ? pdir.y < 0
-          ? Math.min(p.y, q.y)
-          : Math.max(p.y, q.y)
-        : (p.y + q.y) / 2;
-    return [
-      { x: p.x, y: runY },
-      { x: q.x, y: runY },
+  // candidate grid lines: the ports, their extensions, and channels around boxes
+  const xsSet = new Set<number>([a.x, b.x, ep.x, eq.x]);
+  const ysSet = new Set<number>([a.y, b.y, ep.y, eq.y]);
+  for (const bx of [boxA, boxB]) {
+    if (!bx) continue;
+    const pb = padBox(bx, CLEAR);
+    xsSet.add(pb.x);
+    xsSet.add(pb.x + pb.w);
+    ysSet.add(pb.y);
+    ysSet.add(pb.y + pb.h);
+  }
+  const xs = [...xsSet].sort((m, n) => m - n);
+  const ys = [...ysSet].sort((m, n) => m - n);
+  const xi = new Map(xs.map((v, i) => [v, i]));
+  const yi = new Map(ys.map((v, i) => [v, i]));
+
+  const si = xi.get(ep.x)!;
+  const sj = yi.get(ep.y)!;
+  const gi = xi.get(eq.x)!;
+  const gj = yi.get(eq.y)!;
+  const aAxis = aDir.x === 0 ? 2 : 1; // 1 = horizontal, 2 = vertical
+  const bAxis = bDir.x === 0 ? 2 : 1;
+  const BEND = 60; // world-unit penalty per turn (prefer straighter routes)
+
+  // Dijkstra over (i, j, lastAxis)
+  const key = (i: number, j: number, ax: number) => (i * ys.length + j) * 3 + ax;
+  const best = new Map<number, number>();
+  const prev = new Map<number, { i: number; j: number; ax: number } | null>();
+  const startKey = key(si, sj, aAxis);
+  best.set(startKey, 0);
+  prev.set(startKey, null);
+  // tiny array-based priority queue (grid is small)
+  const pq: { c: number; i: number; j: number; ax: number }[] = [
+    { c: 0, i: si, j: sj, ax: aAxis },
+  ];
+  let goalState: { i: number; j: number; ax: number } | null = null;
+  while (pq.length) {
+    let bi = 0;
+    for (let k = 1; k < pq.length; k++) if (pq[k].c < pq[bi].c) bi = k;
+    const cur = pq.splice(bi, 1)[0];
+    const ck = key(cur.i, cur.j, cur.ax);
+    if (cur.c > (best.get(ck) ?? Infinity)) continue;
+    if (cur.i === gi && cur.j === gj) {
+      goalState = cur;
+      break;
+    }
+    const steps = [
+      { di: 1, dj: 0 },
+      { di: -1, dj: 0 },
+      { di: 0, dj: 1 },
+      { di: 0, dj: -1 },
     ];
+    for (const s of steps) {
+      const ni = cur.i + s.di;
+      const nj = cur.j + s.dj;
+      if (ni < 0 || nj < 0 || ni >= xs.length || nj >= ys.length) continue;
+      const from = { x: xs[cur.i], y: ys[cur.j] };
+      const to = { x: xs[ni], y: ys[nj] };
+      if (from.x === to.x && from.y === to.y) continue;
+      if (obstacles.some((o) => segCrossesBox(from, to, o))) continue;
+      const moveAxis = s.di !== 0 ? 1 : 2;
+      const len = Math.abs(to.x - from.x) + Math.abs(to.y - from.y);
+      const c = cur.c + len + (moveAxis !== cur.ax ? BEND : 0);
+      const nk = key(ni, nj, moveAxis);
+      if (c < (best.get(nk) ?? Infinity)) {
+        best.set(nk, c);
+        prev.set(nk, { i: cur.i, j: cur.j, ax: cur.ax });
+        pq.push({ c, i: ni, j: nj, ax: moveAxis });
+      }
+    }
   }
-  if (!pv && !qv) {
-    const runX =
-      Math.sign(pdir.x) === Math.sign(qdir.x)
-        ? pdir.x < 0
-          ? Math.min(p.x, q.x)
-          : Math.max(p.x, q.x)
-        : (p.x + q.x) / 2;
-    return [
-      { x: runX, y: p.y },
-      { x: runX, y: q.y },
-    ];
+
+  if (!goalState) return simpleElbow(a, b);
+  // add the final turn penalty for entering b (informational; path already found)
+  const path: Pt[] = [];
+  let node: { i: number; j: number; ax: number } | null = goalState;
+  while (node) {
+    path.unshift({ x: xs[node.i], y: ys[node.j] });
+    node = prev.get(key(node.i, node.j, node.ax)) ?? null;
   }
-  return pv ? [{ x: p.x, y: q.y }] : [{ x: q.x, y: p.y }];
+  void bAxis;
+  // full polyline: a → (stub) → grid path (ep..eq) → (stub) → b
+  const full = [a, ...path, b];
+  // drop duplicates and collapse collinear points
+  const dedup: Pt[] = [];
+  for (const p of full) {
+    const last = dedup[dedup.length - 1];
+    if (!last || Math.hypot(p.x - last.x, p.y - last.y) > 0.01) dedup.push(p);
+  }
+  const simp: Pt[] = [];
+  for (let k = 0; k < dedup.length; k++) {
+    const prevP = simp[simp.length - 1];
+    const nextP = dedup[k + 1];
+    if (prevP && nextP) {
+      const collinear =
+        (prevP.x === dedup[k].x && dedup[k].x === nextP.x) ||
+        (prevP.y === dedup[k].y && dedup[k].y === nextP.y);
+      if (collinear) continue;
+    }
+    simp.push(dedup[k]);
+  }
+  return simp.length >= 2 ? simp : [a, b];
 }
 
-/** Orthogonal route that leaves a along aDir and arrives at b along -bDir. */
-export function elbowRoute(a: Pt, b: Pt, aDir: Pt | null, bDir: Pt | null): Pt[] {
-  const tdx = b.x - a.x;
-  const tdy = b.y - a.y;
-  const domTo = (dx: number, dy: number): Pt =>
-    Math.abs(dx) >= Math.abs(dy)
-      ? { x: Math.sign(dx) || 1, y: 0 }
-      : { x: 0, y: Math.sign(dy) || 1 };
-  const ea = aDir ?? domTo(tdx, tdy);
-  const eb = bDir ?? domTo(-tdx, -tdy);
-  const dist = Math.hypot(tdx, tdy);
-  const stub = Math.max(6, Math.min(22, dist * 0.25));
-  const a1 = aDir ? { x: a.x + ea.x * stub, y: a.y + ea.y * stub } : a;
-  const b1 = bDir ? { x: b.x + eb.x * stub, y: b.y + eb.y * stub } : b;
-  const corners = orthoConnect(a1, ea, b1, eb);
-  const raw = [a, ...(aDir ? [a1] : []), ...corners, ...(bDir ? [b1] : []), b];
-  // drop consecutive duplicate points so the arrowhead angle stays well-defined
-  const out: Pt[] = [];
-  for (const p of raw) {
-    const last = out[out.length - 1];
-    if (!last || Math.hypot(p.x - last.x, p.y - last.y) > 0.01) out.push(p);
-  }
-  return out.length >= 2 ? out : [a, b];
-}
-
-/** Elbow polyline for a connector, perpendicular to any bound edges. */
+/**
+ * Elbow polyline for a connector. Keeps the edges the user anchored to and
+ * routes around the endpoint shapes.
+ */
 export function elbowRouteForEl(el: {
   x: number;
   y: number;
@@ -234,27 +334,18 @@ export function elbowRouteForEl(el: {
 }): Pt[] {
   const p0 = el.points[0];
   const p1 = el.points[el.points.length - 1];
-  let a = { x: el.x + p0.x, y: el.y + p0.y };
-  let b = { x: el.x + p1.x, y: el.y + p1.y };
+  const a = { x: el.x + p0.x, y: el.y + p0.y };
+  const b = { x: el.x + p1.x, y: el.y + p1.y };
   const boxA = el.boundStart ? boxResolver(el.boundStart.elementId) : null;
   const boxB = el.boundEnd ? boxResolver(el.boundEnd.elementId) : null;
-  // Each bound end connects on the edge facing the OTHER end (its box center
-  // when bound, else its raw point) so the route never cuts through a shape.
-  const targetForA = boxB ? boxCenter(boxB) : b;
-  const targetForB = boxA ? boxCenter(boxA) : a;
-  let aDir: Pt | null = null;
-  let bDir: Pt | null = null;
-  if (boxA) {
-    const c = facingConnection(boxA, targetForA);
-    a = c.point;
-    aDir = c.dir;
-  }
-  if (boxB) {
-    const c = facingConnection(boxB, targetForB);
-    b = c.point;
-    bDir = c.dir;
-  }
-  return elbowRoute(a, b, aDir, bDir);
+  const domTo = (dx: number, dy: number): Pt =>
+    Math.abs(dx) >= Math.abs(dy)
+      ? { x: Math.sign(dx) || 1, y: 0 }
+      : { x: 0, y: Math.sign(dy) || 1 };
+  // Respect the anchored edge; free ends aim along the dominant axis.
+  const aDir = boxA ? outwardNormal(a, boxA) : domTo(b.x - a.x, b.y - a.y);
+  const bDir = boxB ? outwardNormal(b, boxB) : domTo(a.x - b.x, a.y - b.y);
+  return routeElbow(a, aDir, b, bDir, boxA, boxB);
 }
 
 /** Visible start/end points of a connector (elbow route ends, else raw a/b). */
