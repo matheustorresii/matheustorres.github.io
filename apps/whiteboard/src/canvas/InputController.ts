@@ -25,6 +25,7 @@ import {
   boxCenter,
   boxesIntersect,
   clamp,
+  connectorEnds,
   connectorMidpoint,
   curveControl,
   curvePointAt,
@@ -271,7 +272,7 @@ export class InputController {
     // Connectors (line/arrow) are edited by their endpoints + midpoint, not by
     // a bounding box — so they don't get corner-resize or rotate handles.
     if (el.type === "line" || el.type === "arrow") {
-      const { a, b } = curveControl(el);
+      const { a, b } = connectorEnds(el);
       const sa = toScreen(a);
       if (Math.hypot(sa.x - screen.x, sa.y - screen.y) <= hit + 2) return "p0";
       const sb = toScreen(b);

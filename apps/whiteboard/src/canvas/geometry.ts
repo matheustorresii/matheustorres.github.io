@@ -145,23 +145,27 @@ export function setBoxResolver(fn: (id: string) => Box | null): void {
   boxResolver = fn;
 }
 
-/** Outward axis-aligned unit normal of the box edge nearest to point p. */
-function outwardNormal(p: Pt, box: Box): Pt {
-  const cx = clamp(p.x, box.x, box.x + box.w);
-  const cy = clamp(p.y, box.y, box.y + box.h);
-  const dx = p.x - cx;
-  const dy = p.y - cy;
-  if (dx === 0 && dy === 0) {
-    // p is inside the box — fall back to the direction from the box center
-    const ux = p.x - (box.x + box.w / 2);
-    const uy = p.y - (box.y + box.h / 2);
-    return Math.abs(ux) >= Math.abs(uy)
-      ? { x: Math.sign(ux) || 1, y: 0 }
-      : { x: 0, y: Math.sign(uy) || 1 };
+const BIND_GAP = 8; // keep in sync with binding.ts (breathing room at the tip)
+
+/**
+ * Pick the connection point + outward normal on the box edge that FACES `target`.
+ * This is what makes an elbow arrow leave/enter the side pointing at the other
+ * shape (Excalidraw-style), instead of the edge the point happened to land on —
+ * which is what caused routes to cut straight through a box.
+ */
+function facingConnection(box: Box, target: Pt): { point: Pt; dir: Pt } {
+  const cx = box.x + box.w / 2;
+  const cy = box.y + box.h / 2;
+  const dx = target.x - cx;
+  const dy = target.y - cy;
+  if (Math.abs(dx) >= Math.abs(dy)) {
+    const sx = dx >= 0 ? 1 : -1;
+    const ex = sx > 0 ? box.x + box.w : box.x;
+    return { point: { x: ex + sx * BIND_GAP, y: cy }, dir: { x: sx, y: 0 } };
   }
-  return Math.abs(dx) >= Math.abs(dy)
-    ? { x: Math.sign(dx), y: 0 }
-    : { x: 0, y: Math.sign(dy) };
+  const sy = dy >= 0 ? 1 : -1;
+  const ey = sy > 0 ? box.y + box.h : box.y;
+  return { point: { x: cx, y: ey + sy * BIND_GAP }, dir: { x: 0, y: sy } };
 }
 
 /** Intermediate right-angle corners between two ports leaving along p/qdir. */
@@ -230,13 +234,45 @@ export function elbowRouteForEl(el: {
 }): Pt[] {
   const p0 = el.points[0];
   const p1 = el.points[el.points.length - 1];
-  const a = { x: el.x + p0.x, y: el.y + p0.y };
-  const b = { x: el.x + p1.x, y: el.y + p1.y };
+  let a = { x: el.x + p0.x, y: el.y + p0.y };
+  let b = { x: el.x + p1.x, y: el.y + p1.y };
   const boxA = el.boundStart ? boxResolver(el.boundStart.elementId) : null;
   const boxB = el.boundEnd ? boxResolver(el.boundEnd.elementId) : null;
-  const aDir = boxA ? outwardNormal(a, boxA) : null;
-  const bDir = boxB ? outwardNormal(b, boxB) : null;
+  // Each bound end connects on the edge facing the OTHER end (its box center
+  // when bound, else its raw point) so the route never cuts through a shape.
+  const targetForA = boxB ? boxCenter(boxB) : b;
+  const targetForB = boxA ? boxCenter(boxA) : a;
+  let aDir: Pt | null = null;
+  let bDir: Pt | null = null;
+  if (boxA) {
+    const c = facingConnection(boxA, targetForA);
+    a = c.point;
+    aDir = c.dir;
+  }
+  if (boxB) {
+    const c = facingConnection(boxB, targetForB);
+    b = c.point;
+    bDir = c.dir;
+  }
   return elbowRoute(a, b, aDir, bDir);
+}
+
+/** Visible start/end points of a connector (elbow route ends, else raw a/b). */
+export function connectorEnds(el: {
+  x: number;
+  y: number;
+  points: Pt[];
+  bend?: number;
+  elbow?: boolean;
+  boundStart?: { elementId: string };
+  boundEnd?: { elementId: string };
+}): { a: Pt; b: Pt } {
+  if (el.elbow) {
+    const r = elbowRouteForEl(el);
+    return { a: r[0], b: r[r.length - 1] };
+  }
+  const { a, b } = curveControl(el);
+  return { a, b };
 }
 
 /** The visual midpoint of a line/arrow (curve/elbow aware) for labels & handles. */

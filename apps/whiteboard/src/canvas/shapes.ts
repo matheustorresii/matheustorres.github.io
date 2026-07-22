@@ -137,12 +137,15 @@ export function drawLine(ctx: CanvasRenderingContext2D, el: LineElement): void {
   applyStroke(ctx, el);
   const { a, b, c } = curveControl(el);
   ctx.beginPath();
-  ctx.moveTo(a.x, a.y);
   if (el.elbow) {
     const pts = elbowRouteForEl(el);
+    ctx.moveTo(pts[0].x, pts[0].y);
     for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
-  } else if (c) ctx.quadraticCurveTo(c.x, c.y, b.x, b.y);
-  else ctx.lineTo(b.x, b.y);
+  } else {
+    ctx.moveTo(a.x, a.y);
+    if (c) ctx.quadraticCurveTo(c.x, c.y, b.x, b.y);
+    else ctx.lineTo(b.x, b.y);
+  }
   ctx.stroke();
 }
 
@@ -150,33 +153,39 @@ export function drawArrow(ctx: CanvasRenderingContext2D, el: ArrowElement): void
   applyStroke(ctx, el);
   const { a, b, c } = curveControl(el);
   ctx.beginPath();
-  ctx.moveTo(a.x, a.y);
   let from = a; // point just before the end, for the arrowhead angle
+  let end = b; // where the arrowhead tip sits
   if (el.elbow) {
+    // the elbow route may re-anchor its endpoints to the facing edges, so the
+    // whole path (start, corners, tip) comes from the route, not the raw a/b.
     const pts = elbowRouteForEl(el);
+    ctx.moveTo(pts[0].x, pts[0].y);
     for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
     from = pts[pts.length - 2];
+    end = pts[pts.length - 1];
   } else if (c) {
+    ctx.moveTo(a.x, a.y);
     ctx.quadraticCurveTo(c.x, c.y, b.x, b.y);
     from = c;
   } else {
+    ctx.moveTo(a.x, a.y);
     ctx.lineTo(b.x, b.y);
   }
   ctx.stroke();
 
   // arrowhead — angle from the tangent at the end
-  const angle = Math.atan2(b.y - from.y, b.x - from.x);
+  const angle = Math.atan2(end.y - from.y, end.x - from.x);
   const size = Math.max(10, el.strokeWidth * 4);
   ctx.beginPath();
-  ctx.moveTo(b.x, b.y);
+  ctx.moveTo(end.x, end.y);
   ctx.lineTo(
-    b.x - size * Math.cos(angle - Math.PI / 6),
-    b.y - size * Math.sin(angle - Math.PI / 6),
+    end.x - size * Math.cos(angle - Math.PI / 6),
+    end.y - size * Math.sin(angle - Math.PI / 6),
   );
-  ctx.moveTo(b.x, b.y);
+  ctx.moveTo(end.x, end.y);
   ctx.lineTo(
-    b.x - size * Math.cos(angle + Math.PI / 6),
-    b.y - size * Math.sin(angle + Math.PI / 6),
+    end.x - size * Math.cos(angle + Math.PI / 6),
+    end.y - size * Math.sin(angle + Math.PI / 6),
   );
   ctx.stroke();
 

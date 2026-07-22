@@ -1,6 +1,6 @@
 import type { Element } from "../types/model";
 import type { SceneStore } from "./SceneStore";
-import { aabb, boxesIntersect, curveControl, curvePointAt, GRID } from "./geometry";
+import { aabb, boxesIntersect, connectorEnds, curveControl, curvePointAt, GRID } from "./geometry";
 import { drawElement } from "./shapes";
 import { cornerHandles, selectionBox, HANDLE_SCREEN_SIZE } from "./selection";
 import { visibleWorldBox } from "./viewport";
@@ -151,10 +151,11 @@ function drawSelection(
   // endpoint handles + a midpoint bend handle, with no bounding frame.
   if (el.type === "line" || el.type === "arrow") {
     const g = curveControl(el);
+    const ends = connectorEnds(el);
     const hr = (HANDLE_SCREEN_SIZE / 2 + 1) / scale;
     if (withHandles) {
       ctx.fillStyle = "#0f120b";
-      for (const p of [g.a, g.b]) {
+      for (const p of [ends.a, ends.b]) {
         ctx.beginPath();
         ctx.arc(p.x, p.y, hr, 0, Math.PI * 2);
         ctx.fill();
@@ -171,7 +172,7 @@ function drawSelection(
     } else {
       // part of a multi-selection: mark the endpoints subtly
       ctx.fillStyle = SELECTION_COLOR;
-      for (const p of [g.a, g.b]) {
+      for (const p of [ends.a, ends.b]) {
         ctx.beginPath();
         ctx.arc(p.x, p.y, hr * 0.7, 0, Math.PI * 2);
         ctx.fill();
