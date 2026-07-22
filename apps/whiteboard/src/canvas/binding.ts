@@ -54,8 +54,12 @@ export function makeBinding(target: Element, p: Pt): Binding {
   };
 }
 
-/** Resolve the world position of a binding against the current target box. */
-export function resolveBinding(binding: Binding, target: Element): Pt {
+/**
+ * Resolve the world position of a binding against the current target box.
+ * `gapOverride` lets the caller pin the tail flush to the edge (gap 0) while the
+ * head keeps its breathing room.
+ */
+export function resolveBinding(binding: Binding, target: Element, gapOverride?: number): Pt {
   const b = aabb(target);
   // point on/near the border closest to the focus anchor
   const raw = { x: b.x + binding.focusX * b.w, y: b.y + binding.focusY * b.h };
@@ -63,12 +67,12 @@ export function resolveBinding(binding: Binding, target: Element): Pt {
   // push the point out to the border along the line from center to raw
   const dx = raw.x - center.x;
   const dy = raw.y - center.y;
-  if (dx === 0 && dy === 0) return { x: center.x, y: b.y - binding.gap };
+  const gap = gapOverride ?? Math.max(binding.gap, BIND_GAP);
+  if (dx === 0 && dy === 0) return { x: center.x, y: b.y - gap };
   const scaleX = dx !== 0 ? b.w / 2 / Math.abs(dx) : Infinity;
   const scaleY = dy !== 0 ? b.h / 2 / Math.abs(dy) : Infinity;
   const s = Math.min(scaleX, scaleY);
   // push the tip out along the edge normal so it never buries into the shape
-  const gap = Math.max(binding.gap, BIND_GAP);
   const onX = scaleX <= scaleY; // hit a left/right edge → gap along x, else along y
   return {
     x: center.x + dx * s + (onX ? Math.sign(dx) * gap : 0),
@@ -91,7 +95,7 @@ export function applyBindings(
   let e = absEnd;
   if (arrow.boundStart) {
     const t = lookup(arrow.boundStart.elementId);
-    if (t) s = resolveBinding(arrow.boundStart, t);
+    if (t) s = resolveBinding(arrow.boundStart, t, 0); // tail flush against the edge
   }
   if (arrow.boundEnd) {
     const t = lookup(arrow.boundEnd.elementId);

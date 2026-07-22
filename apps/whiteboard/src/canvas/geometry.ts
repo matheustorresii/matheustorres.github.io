@@ -170,6 +170,14 @@ function padBox(b: Box, m: number): Box {
   return { x: b.x - m, y: b.y - m, w: b.w + 2 * m, h: b.h + 2 * m };
 }
 
+/** Move a point onto the box border along its outward normal (flush contact). */
+function snapToEdge(p: Pt, box: Box, dir: Pt): Pt {
+  if (dir.x !== 0) {
+    return { x: dir.x < 0 ? box.x : box.x + box.w, y: clamp(p.y, box.y, box.y + box.h) };
+  }
+  return { x: clamp(p.x, box.x, box.x + box.w), y: dir.y < 0 ? box.y : box.y + box.h };
+}
+
 /** Does an axis-aligned segment pass through a box's open interior? */
 function segCrossesBox(p: Pt, q: Pt, box: Box): boolean {
   const eps = 0.5;
@@ -345,7 +353,10 @@ export function elbowRouteForEl(el: {
   // Respect the anchored edge; free ends aim along the dominant axis.
   const aDir = boxA ? outwardNormal(a, boxA) : domTo(b.x - a.x, b.y - a.y);
   const bDir = boxB ? outwardNormal(b, boxB) : domTo(a.x - b.x, a.y - b.y);
-  return routeElbow(a, aDir, b, bDir, boxA, boxB);
+  // The tail sits FLUSH on the source edge (no gap) so it visibly connects;
+  // the head keeps its gap for the arrowhead's breathing room.
+  const start = boxA ? snapToEdge(a, boxA, aDir) : a;
+  return routeElbow(start, aDir, b, bDir, boxA, boxB);
 }
 
 /** Visible start/end points of a connector (elbow route ends, else raw a/b). */
