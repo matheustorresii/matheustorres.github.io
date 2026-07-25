@@ -23,7 +23,7 @@ import { screenToWorld } from "./viewport";
 import {
   aabb,
   boxCenter,
-  boxesIntersect,
+  boxContains,
   clamp,
   connectorEnds,
   connectorMidpoint,
@@ -40,7 +40,7 @@ import {
 } from "./geometry";
 import { hitTest } from "./hitTest";
 import { cornerHandles, oppositeCorner, type HandleId } from "./selection";
-import { measureTextEl } from "./shapes";
+import { clampColorRuns, measureTextEl, mergeColorRun } from "./shapes";
 import { applyBindings, findBindTarget, makeBinding } from "./binding";
 
 type State =
@@ -125,6 +125,7 @@ export class InputController {
     window.addEventListener("keyup", this.onKeyUp);
     window.addEventListener("paste", this.onPaste);
     c.addEventListener("dblclick", this.onDblClick);
+    c.addEventListener("contextmenu", this.onContextMenu);
     c.addEventListener("dragover", this.onDragOver);
     c.addEventListener("drop", this.onDrop);
   }
@@ -140,6 +141,7 @@ export class InputController {
     window.removeEventListener("keyup", this.onKeyUp);
     window.removeEventListener("paste", this.onPaste);
     c.removeEventListener("dblclick", this.onDblClick);
+    c.removeEventListener("contextmenu", this.onContextMenu);
     c.removeEventListener("dragover", this.onDragOver);
     c.removeEventListener("drop", this.onDrop);
   }
@@ -365,12 +367,24 @@ export class InputController {
       }
       const hit = hitTest(scene.all(), world, (this.touch ? 14 : PICK_TOL) / this.scale);
       if (hit) {
+        const mates = this.withGroups([hit.id]);
         if (additive) {
-          scene.toggleSelection(hit.id); // Cmd/Shift+click add/remove
-          if (scene.isSelected(hit.id)) this.beginDrag(world);
+          // Cmd/Shift+click toggles the element (or its whole group)
+          const on = scene.isSelected(hit.id);
+          for (const id of mates) {
+            if (on) scene.selectedIds.delete(id);
+            else scene.selectedIds.add(id);
+          }
+          scene.markDirty();
+          scene.changed.notify();
+          if (!on) this.beginDrag(world);
           return;
         }
-        if (!scene.isSelected(hit.id)) scene.select(hit.id);
+        if (!scene.isSelected(hit.id)) {
+          scene.selectedIds = mates;
+          scene.markDirty();
+          scene.changed.notify();
+        }
         this.beginDrag(world); // drag the whole current selection
         return;
       }
@@ -650,14 +664,32 @@ export class InputController {
       world.y,
     );
     this.root.scene.marqueeRect = rect;
+    // Only select elements the marquee FULLY encloses (their whole AABB is
+    // inside), Figma-style — not everything it merely grazes.
     const hit = this.root.scene
       .all()
-      .filter((el) => boxesIntersect(aabb(el), rect))
+      .filter((el) => boxContains(rect, aabb(el)))
       .map((el) => el.id);
-    const next = this.marqueeS.additive ? new Set(this.marqueeS.base) : new Set<string>();
-    for (const id of hit) next.add(id);
+    const base = this.marqueeS.additive ? this.marqueeS.base : new Set<string>();
+    const next = this.withGroups([...base, ...hit]);
     this.root.scene.selectedIds = next;
     this.root.scene.markDirty();
+  }
+
+  /** Expand a set of ids to include every element grouped with any of them. */
+  private withGroups(ids: Iterable<string>): Set<string> {
+    const scene = this.root.scene;
+    const groups = new Set<string>();
+    const out = new Set<string>();
+    for (const id of ids) {
+      out.add(id);
+      const el = scene.get(id);
+      if (el?.groupId) groups.add(el.groupId);
+    }
+    if (groups.size) {
+      for (const el of scene.all()) if (el.groupId && groups.has(el.groupId)) out.add(el.id);
+    }
+    return out;
   }
 
   private applyDrag(dx: number, dy: number): void {
@@ -1049,7 +1081,12 @@ export class InputController {
         backToSelect();
         return;
       }
-      const after: TextElement = { ...clone(before), text, updatedAt: Date.now() };
+      const after: TextElement = {
+        ...clone(before),
+        text,
+        colorRuns: clampColorRuns(before.colorRuns, text.length),
+        updatedAt: Date.now(),
+      };
       const size = measureTextEl(this.measureCtx(), after);
       after.w = size.w;
       after.h = size.h;
@@ -1118,6 +1155,17 @@ export class InputController {
   // ---- style application ----
   applyStyleToSelection(patch: Partial<StyleDefaults>): void {
     const scene = this.root.scene;
+    // While editing a plain-text element with an active text selection, a stroke
+    // color click paints just that range (multi-color text) instead of the whole
+    // element. Any other patch key falls through to the normal path.
+    if (
+      this.editingText &&
+      patch.strokeColor !== undefined &&
+      Object.keys(patch).length === 1 &&
+      this.applyTextColorRange(patch.strokeColor)
+    ) {
+      return;
+    }
     const sel = scene.selectedElements();
     if (sel.length === 0) return;
     const changes: { before: Element; after: Element }[] = [];
@@ -1181,6 +1229,123 @@ export class InputController {
     }
     this.root.history.execute(scene, updateMany(changes));
   }
+
+  /**
+   * Paint the color of the current text-editor selection onto the editing text
+   * element as a color run. Returns false when there's no usable range so the
+   * caller can fall back to whole-element styling.
+   */
+  private applyTextColorRange(color: string): boolean {
+    const scene = this.root.scene;
+    const id = scene.editingId;
+    const sel = this.root.editingTextSel;
+    const live = this.root.getEditingTextValue?.();
+    if (!id || !sel || sel.start >= sel.end || live == null) return false;
+    const el = scene.get(id);
+    if (!el || el.type !== "text" || el.mono) return false;
+    const before = clone(el);
+    const after = clone(el) as TextElement;
+    after.text = live; // sync so offsets line up with what's on screen
+    after.colorRuns = mergeColorRun(after.colorRuns, sel.start, sel.end, color);
+    after.updatedAt = Date.now();
+    this.root.history.execute(scene, updateElement(before, after));
+    return true;
+  }
+
+  // ---- z-order & grouping (context menu) ----
+  /** Re-stack the selection: bring to front / send to back / one step either way. */
+  reorderSelection(mode: "front" | "back" | "forward" | "backward"): void {
+    const scene = this.root.scene;
+    const selIds = new Set(scene.selectedIds);
+    if (selIds.size === 0) return;
+    const ordered = [...scene.all()].sort((a, b) => a.zIndex - b.zIndex);
+    let next: Element[];
+    if (mode === "front") {
+      next = [...ordered.filter((e) => !selIds.has(e.id)), ...ordered.filter((e) => selIds.has(e.id))];
+    } else if (mode === "back") {
+      next = [...ordered.filter((e) => selIds.has(e.id)), ...ordered.filter((e) => !selIds.has(e.id))];
+    } else {
+      next = [...ordered];
+      if (mode === "forward") {
+        for (let i = next.length - 2; i >= 0; i--) {
+          if (selIds.has(next[i].id) && !selIds.has(next[i + 1].id))
+            [next[i], next[i + 1]] = [next[i + 1], next[i]];
+        }
+      } else {
+        for (let i = 1; i < next.length; i++) {
+          if (selIds.has(next[i].id) && !selIds.has(next[i - 1].id))
+            [next[i], next[i - 1]] = [next[i - 1], next[i]];
+        }
+      }
+    }
+    const changes: { before: Element; after: Element }[] = [];
+    next.forEach((el, i) => {
+      if (el.zIndex !== i) {
+        const before = clone(el);
+        const after = clone(el);
+        after.zIndex = i;
+        after.updatedAt = Date.now();
+        changes.push({ before, after });
+      }
+    });
+    if (changes.length) this.root.history.execute(scene, updateMany(changes));
+  }
+
+  /** Tie the selected elements into one group (min 2). */
+  groupSelection(): void {
+    const scene = this.root.scene;
+    const sel = scene.selectedElements();
+    if (sel.length < 2) return;
+    const gid = "grp-" + newId();
+    const changes = sel.map((el) => {
+      const before = clone(el);
+      const after = clone(el);
+      after.groupId = gid;
+      after.updatedAt = Date.now();
+      return { before, after };
+    });
+    this.root.history.execute(scene, updateMany(changes));
+  }
+
+  /** Break the group(s) of the selected elements apart. */
+  ungroupSelection(): void {
+    const scene = this.root.scene;
+    const sel = scene.selectedElements().filter((e) => e.groupId);
+    if (sel.length === 0) return;
+    const changes = sel.map((el) => {
+      const before = clone(el);
+      const after = clone(el);
+      delete after.groupId;
+      after.updatedAt = Date.now();
+      return { before, after };
+    });
+    this.root.history.execute(scene, updateMany(changes));
+  }
+
+  // ---- context menu ----
+  private onContextMenu = (e: MouseEvent): void => {
+    e.preventDefault();
+    if (this.root.readonly || this.editingText) return;
+    const scene = this.root.scene;
+    const world = this.worldPt(e);
+    // right-clicking an unselected element selects it (group-aware) first
+    const hit = hitTest(scene.all(), world, (this.touch ? 14 : PICK_TOL) / this.scale);
+    if (hit && !scene.isSelected(hit.id)) {
+      scene.selectedIds = this.withGroups([hit.id]);
+      scene.markDirty();
+      scene.changed.notify();
+    } else if (!hit && !this.insideSelection(world)) {
+      scene.clearSelection();
+    }
+    const sel = scene.selectedElements();
+    this.root.onContextMenu?.({
+      screenX: e.clientX,
+      screenY: e.clientY,
+      hasSelection: sel.length > 0,
+      canGroup: sel.length >= 2,
+      canUngroup: sel.some((s) => s.groupId),
+    });
+  };
 
   // ---- wheel ----
   private onWheel = (e: WheelEvent): void => {
@@ -1248,6 +1413,22 @@ export class InputController {
     if (mod && e.key.toLowerCase() === "d") {
       e.preventDefault(); // browser bookmark
       if (!this.root.readonly) this.duplicateSelection();
+      return;
+    }
+    if (mod && e.key.toLowerCase() === "g") {
+      e.preventDefault();
+      if (!this.root.readonly) {
+        if (e.shiftKey) this.ungroupSelection();
+        else this.groupSelection();
+      }
+      return;
+    }
+    if (mod && (e.key === "]" || e.key === "[")) {
+      e.preventDefault();
+      if (!this.root.readonly) {
+        const front = e.key === "]";
+        this.reorderSelection(e.shiftKey ? (front ? "front" : "back") : front ? "forward" : "backward");
+      }
       return;
     }
     if (e.key === " ") {
@@ -1363,7 +1544,7 @@ export class InputController {
     this.root.setTool("select");
   }
 
-  private duplicateSelection(): void {
+  duplicateSelection(): void {
     const sel = this.root.scene.selectedElements();
     if (sel.length === 0) return;
     const els = this.cloneForPaste(sel, 16);

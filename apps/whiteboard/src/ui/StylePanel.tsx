@@ -56,6 +56,11 @@ export function StylePanel({
               />
             ))}
           </div>
+          {isText && (
+            <div className="hint" style={{ marginTop: 2 }}>
+              Editando: selecione um trecho e escolha a cor para pintar só ele.
+            </div>
+          )}
         </div>
       )}
 

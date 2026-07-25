@@ -59,6 +59,16 @@ export function boxesIntersect(a: Box, b: Box): boolean {
   );
 }
 
+/** True when `inner` is fully enclosed by `outer`. */
+export function boxContains(outer: Box, inner: Box): boolean {
+  return (
+    inner.x >= outer.x &&
+    inner.y >= outer.y &&
+    inner.x + inner.w <= outer.x + outer.w &&
+    inner.y + inner.h <= outer.y + outer.h
+  );
+}
+
 /** Distance from point p to segment ab. */
 export function distPointToSegment(p: Pt, a: Pt, b: Pt): number {
   const dx = b.x - a.x;

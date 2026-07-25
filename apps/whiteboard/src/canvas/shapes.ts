@@ -327,15 +327,114 @@ export function drawText(ctx: CanvasRenderingContext2D, el: TextElement): void {
     return;
   }
 
-  ctx.fillStyle = adapt(el.strokeColor);
+  const base = adapt(el.strokeColor);
   const align = el.align ?? "left";
-  const anchorX =
-    align === "center" ? el.x + el.w / 2 : align === "right" ? el.x + el.w - pad : el.x + pad;
-  ctx.textAlign = align;
-  lines.forEach((line, i) => {
-    ctx.fillText(line, anchorX, el.y + pad + i * lineHeight);
-  });
+  const runs = el.colorRuns?.length ? el.colorRuns : null;
+
+  if (!runs) {
+    ctx.fillStyle = base;
+    const anchorX =
+      align === "center" ? el.x + el.w / 2 : align === "right" ? el.x + el.w - pad : el.x + pad;
+    ctx.textAlign = align;
+    lines.forEach((line, i) => {
+      ctx.fillText(line, anchorX, el.y + pad + i * lineHeight);
+    });
+    ctx.textAlign = "left";
+    return;
+  }
+
+  // Multi-color: draw each visual line as a sequence of same-color segments,
+  // positioning them by hand so alignment still works.
   ctx.textAlign = "left";
+  const starts = lineStartOffsets(el.text, lines);
+  lines.forEach((line, i) => {
+    const y = el.y + pad + i * lineHeight;
+    const segs = colorSegments(line, starts[i], runs, base);
+    const lineW = ctx.measureText(line).width;
+    let x =
+      align === "center"
+        ? el.x + el.w / 2 - lineW / 2
+        : align === "right"
+          ? el.x + el.w - pad - lineW
+          : el.x + pad;
+    for (const seg of segs) {
+      ctx.fillStyle = seg.color === base ? base : adapt(seg.color);
+      ctx.fillText(seg.text, x, y);
+      x += ctx.measureText(seg.text).width;
+    }
+  });
+}
+
+/** Absolute start offset (into raw text) of each laid-out visual line. */
+function lineStartOffsets(text: string, lines: string[]): number[] {
+  const starts: number[] = [];
+  let cursor = 0;
+  for (const line of lines) {
+    if (line.length === 0) {
+      starts.push(cursor);
+      continue;
+    }
+    const idx = text.indexOf(line, cursor);
+    const start = idx >= 0 ? idx : cursor;
+    starts.push(start);
+    cursor = start + line.length;
+  }
+  return starts;
+}
+
+/** Split a visual line into consecutive same-color runs. */
+function colorSegments(
+  line: string,
+  start: number,
+  runs: { start: number; end: number; color: string }[],
+  base: string,
+): { text: string; color: string }[] {
+  const colorAt = (abs: number): string => {
+    for (const r of runs) if (abs >= r.start && abs < r.end) return r.color;
+    return base;
+  };
+  const segs: { text: string; color: string }[] = [];
+  for (let i = 0; i < line.length; i++) {
+    const c = colorAt(start + i);
+    const last = segs[segs.length - 1];
+    if (last && last.color === c) last.text += line[i];
+    else segs.push({ text: line[i], color: c });
+  }
+  return segs;
+}
+
+/** Clamp/drop color runs so they stay within `[0, len)` after a text edit. */
+export function clampColorRuns(
+  runs: { start: number; end: number; color: string }[] | undefined,
+  len: number,
+): { start: number; end: number; color: string }[] | undefined {
+  if (!runs?.length) return undefined;
+  const out = runs
+    .map((r) => ({ ...r, start: Math.max(0, r.start), end: Math.min(len, r.end) }))
+    .filter((r) => r.start < r.end);
+  return out.length ? out : undefined;
+}
+
+/** Merge a new [start,end) color over existing runs (replacing overlaps). */
+export function mergeColorRun(
+  runs: { start: number; end: number; color: string }[] | undefined,
+  start: number,
+  end: number,
+  color: string,
+): { start: number; end: number; color: string }[] {
+  if (start >= end) return runs ?? [];
+  const out: { start: number; end: number; color: string }[] = [];
+  for (const r of runs ?? []) {
+    if (r.end <= start || r.start >= end) {
+      out.push(r); // no overlap
+      continue;
+    }
+    if (r.start < start) out.push({ ...r, end: start }); // left remnant
+    if (r.end > end) out.push({ ...r, start: end }); // right remnant
+  }
+  out.push({ start, end, color });
+  out.sort((a, b) => a.start - b.start);
+  return out;
 }
 
 /** Element-level measure used on commit/resize. */

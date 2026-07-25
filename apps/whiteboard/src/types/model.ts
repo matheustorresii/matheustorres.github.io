@@ -27,6 +27,7 @@ export interface BaseElement {
   seed: number; // reserved for roughjs
   rounded?: boolean; // rounded corners (rectangle & diamond)
   label?: string; // centered text label (shapes) / midpoint label (arrows)
+  groupId?: string; // elements sharing a groupId select & move together
   createdAt: number;
   updatedAt: number;
 }
@@ -75,6 +76,13 @@ export interface FreehandElement extends BaseElement {
   pressures?: number[];
 }
 
+/** A per-character color span into a text element's raw `text` (plain text only). */
+export interface ColorRun {
+  start: number; // inclusive char offset
+  end: number; // exclusive char offset
+  color: string; // hex
+}
+
 export interface TextElement extends BaseElement {
   type: "text";
   text: string;
@@ -83,6 +91,9 @@ export interface TextElement extends BaseElement {
   mono?: boolean; // renders as a monospace "code block" with a panel background
   lang?: string; // syntax-highlight language for code blocks (when mono)
   align?: "left" | "center" | "right";
+  // Per-range colors laid over `strokeColor` (plain text only; code blocks use
+  // syntax highlighting). Offsets index into the raw `text`.
+  colorRuns?: ColorRun[];
   // When false, `w` is a fixed wrap width and text reflows to it. When true
   // (default), the box hugs the text and only manual newlines break lines.
   autoWidth?: boolean;

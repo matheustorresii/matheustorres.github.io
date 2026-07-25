@@ -22,6 +22,14 @@ export interface TextEditRequest {
   targetKind?: "text" | "label"; // "label" edits an element's `label`, not a text element
 }
 
+export interface ContextMenuInfo {
+  screenX: number;
+  screenY: number;
+  hasSelection: boolean;
+  canGroup: boolean;
+  canUngroup: boolean;
+}
+
 /**
  * Owns the <canvas>, the render loop, DPR/resize handling, and wires input.
  * Zero React inside. The React chrome talks to it through the public methods
@@ -52,6 +60,12 @@ export class CanvasRoot {
   onUiSync: (() => void) | null = null; // selection/viewport/tool changed
   onTextEdit: ((req: TextEditRequest | null) => void) | null = null;
   onToolChange: ((t: Tool) => void) | null = null; // tool changed internally
+  onContextMenu: ((info: ContextMenuInfo) => void) | null = null; // right-click menu
+
+  // Set by the text overlay so a color-swatch click can paint the current
+  // text selection range (multi-color text) instead of the whole element.
+  editingTextSel: { start: number; end: number } | null = null;
+  getEditingTextValue: (() => string | null) | null = null;
 
   constructor(host: HTMLElement) {
     this.canvas = document.createElement("canvas");
@@ -186,6 +200,21 @@ export class CanvasRoot {
   /** Delete the current selection (used by the mobile delete button). */
   deleteSelection(): void {
     this.input.deleteSelection();
+  }
+
+  duplicateSelection(): void {
+    this.input.duplicateSelection();
+  }
+
+  /** Re-stack the selection (context menu). */
+  reorder(mode: "front" | "back" | "forward" | "backward"): void {
+    this.input.reorderSelection(mode);
+  }
+  group(): void {
+    this.input.groupSelection();
+  }
+  ungroup(): void {
+    this.input.ungroupSelection();
   }
 
   destroy(): void {

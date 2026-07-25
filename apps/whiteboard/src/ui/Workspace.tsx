@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Board, StyleDefaults, Tool } from "../types/model";
 import type { Route } from "../router";
 import { goHome, goToBoard } from "../router";
-import { CanvasRoot, type TextEditRequest } from "../canvas/CanvasRoot";
+import { CanvasRoot, type ContextMenuInfo, type TextEditRequest } from "../canvas/CanvasRoot";
 import { worldToScreen } from "../canvas/viewport";
 import { useUiStore } from "../store/uiStore";
 import { useLibraryStore } from "../store/libraryStore";
@@ -48,6 +48,7 @@ export function Workspace({ route }: { route: Route }) {
   const syncingRef = useRef(false);
 
   const [textReq, setTextReq] = useState<TextEditRequest | null>(null);
+  const [ctxMenu, setCtxMenu] = useState<ContextMenuInfo | null>(null);
   const [ui, setUi] = useState<UiMirror>({
     zoom: 1,
     canUndo: false,
@@ -156,6 +157,7 @@ export function Workspace({ route }: { route: Route }) {
 
     root.onTextEdit = (req) => setTextReq(req);
     root.onToolChange = (t) => setToolStore(t);
+    root.onContextMenu = (info) => setCtxMenu(info);
     root.onUiSync = () => {
       const sc = root.scene;
       let sel: SelInfo | null = null;
@@ -438,6 +440,14 @@ export function Workspace({ route }: { route: Route }) {
             onDone={() => setTextReq(null)}
           />
         )}
+
+        {ctxMenu && (
+          <ContextMenu
+            info={ctxMenu}
+            root={rootRef.current}
+            onClose={() => setCtxMenu(null)}
+          />
+        )}
       </div>
 
       {syncOpen && (
@@ -495,6 +505,15 @@ function TextOverlay({
     t.style.height = t.scrollHeight + "px";
   };
 
+  // Publish the live textarea value + selection to the canvas root so a stroke
+  // color click can paint just the selected range (multi-color text).
+  const pushSel = useCallback(() => {
+    const t = ref.current;
+    if (!t || !root) return;
+    root.getEditingTextValue = () => ref.current?.value ?? null;
+    root.editingTextSel = { start: t.selectionStart, end: t.selectionEnd };
+  }, [root]);
+
   useEffect(() => {
     // Defer focus past the click's default action (see note): a same-tick
     // focus() is overridden by the browser's focus-fixup to <body>.
@@ -507,9 +526,16 @@ function TextOverlay({
         const len = t.value.length;
         t.setSelectionRange(len, len);
         autosize();
+        pushSel();
       }
     }, 0);
-    return () => window.clearTimeout(id);
+    return () => {
+      window.clearTimeout(id);
+      if (root) {
+        root.editingTextSel = null;
+        root.getEditingTextValue = null;
+      }
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -547,7 +573,13 @@ function TextOverlay({
       ref={ref}
       className="text-overlay"
       defaultValue={req.initial}
-      onInput={autosize}
+      onInput={() => {
+        autosize();
+        pushSel();
+      }}
+      onSelect={pushSel}
+      onMouseUp={pushSel}
+      onKeyUp={pushSel}
       onBlur={(e) => {
         // Clicking the style panel must NOT commit — the user is adjusting
         // font/color/mono for this very text. Anything else (the toolbar, the
@@ -592,5 +624,110 @@ function TextOverlay({
         transform: req.targetKind === "label" ? "translate(-50%, -50%)" : undefined,
       }}
     />
+  );
+}
+
+function ContextMenu({
+  info,
+  root,
+  onClose,
+}: {
+  info: ContextMenuInfo;
+  root: CanvasRoot | null;
+  onClose: () => void;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const close = (e: PointerEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) onClose();
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    // capture so a click anywhere (including the canvas) dismisses first
+    window.addEventListener("pointerdown", close, true);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("pointerdown", close, true);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [onClose]);
+
+  if (!root) return null;
+
+  const run = (fn: () => void) => {
+    fn();
+    onClose();
+  };
+
+  // keep the menu on-screen
+  const MW = 210;
+  const MH = 340;
+  const left = Math.min(info.screenX, window.innerWidth - MW - 8);
+  const top = Math.min(info.screenY, window.innerHeight - MH - 8);
+
+  const Item = ({
+    label,
+    shortcut,
+    disabled,
+    onClick,
+    danger,
+  }: {
+    label: string;
+    shortcut?: string;
+    disabled?: boolean;
+    onClick: () => void;
+    danger?: boolean;
+  }) => (
+    <button
+      className={`ctx-item ${danger ? "danger" : ""}`}
+      disabled={disabled}
+      onClick={() => run(onClick)}
+    >
+      <span>{label}</span>
+      {shortcut && <span className="ctx-shortcut">{shortcut}</span>}
+    </button>
+  );
+
+  return (
+    <div
+      ref={ref}
+      className="context-menu"
+      style={{ left, top }}
+      onContextMenu={(e) => e.preventDefault()}
+    >
+      {info.hasSelection ? (
+        <>
+          <Item label="Trazer para frente" onClick={() => root.reorder("front")} />
+          <Item label="Avançar" onClick={() => root.reorder("forward")} />
+          <Item label="Recuar" onClick={() => root.reorder("backward")} />
+          <Item label="Enviar para trás" onClick={() => root.reorder("back")} />
+          <div className="ctx-sep" />
+          <Item
+            label="Agrupar"
+            shortcut="⌘G"
+            disabled={!info.canGroup}
+            onClick={() => root.group()}
+          />
+          <Item
+            label="Desagrupar"
+            shortcut="⇧⌘G"
+            disabled={!info.canUngroup}
+            onClick={() => root.ungroup()}
+          />
+          <div className="ctx-sep" />
+          <Item label="Duplicar" shortcut="⌘D" onClick={() => root.duplicateSelection()} />
+          <Item
+            label="Excluir"
+            shortcut="⌫"
+            danger
+            onClick={() => root.deleteSelection()}
+          />
+        </>
+      ) : (
+        <div className="ctx-empty">Nada selecionado</div>
+      )}
+    </div>
   );
 }
