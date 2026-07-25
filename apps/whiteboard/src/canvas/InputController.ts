@@ -107,6 +107,8 @@ export class InputController {
   private marqueeS: MarqueeSession | null = null;
   private drawStart: Pt | null = null;
   private editingText = false;
+  private editReq: TextEditRequest | null = null; // params of the open text editor
+  private newTextId: string | null = null; // element materialized mid-creation (for color runs)
   private clipboard: Element[] = []; // in-app copy/paste buffer
   // touch / multi-touch
   private pointers = new Map<number, Pt>(); // active pointers (screen coords)
@@ -1041,10 +1043,56 @@ export class InputController {
       boxWidth,
     };
     this.editingText = true;
+    this.editReq = req;
+    this.newTextId = null;
     // hide the on-canvas copy while editing an existing element (no doubling)
     this.root.scene.editingId = id;
     if (id) this.root.scene.markDirty();
     this.root.onTextEdit?.(req);
+  }
+
+  /**
+   * Turn an in-progress NEW text edit into a real scene element so a color run
+   * has something to attach to (multi-color while first typing). Returns the id,
+   * or null when there's nothing to materialize (labels / mono / already exists).
+   */
+  private materializeEditingText(text: string): string | null {
+    const req = this.editReq;
+    if (!req || req.id !== null || req.targetKind === "label" || req.mono) return null;
+    if (this.newTextId) return this.newTextId;
+    const scene = this.root.scene;
+    const now = Date.now();
+    const el: TextElement = {
+      id: newId(),
+      type: "text",
+      x: req.worldX,
+      y: req.worldY,
+      w: req.boxWidth,
+      h: 0,
+      rotation: 0,
+      strokeColor: req.color,
+      fillColor: "transparent",
+      strokeWidth: 1,
+      opacity: this.root.style.opacity,
+      zIndex: scene.nextZIndex(),
+      seed: 1,
+      createdAt: now,
+      updatedAt: now,
+      text,
+      fontSize: req.fontSize,
+      fontFamily: "Inter",
+      mono: req.mono,
+      lang: this.root.style.lang,
+      align: this.root.style.align,
+      autoWidth: req.autoWidth,
+    };
+    const size = measureTextEl(this.measureCtx(), el);
+    el.w = size.w;
+    el.h = size.h;
+    this.root.history.execute(scene, addElement(el));
+    this.newTextId = el.id;
+    scene.editingId = el.id; // keep the on-canvas copy hidden under the textarea
+    return el.id;
   }
 
   commitText(req: TextEditRequest, text: string): void {
@@ -1054,6 +1102,11 @@ export class InputController {
     this.root.scene.markDirty();
     this.root.onTextEdit?.(null);
     const scene = this.root.scene;
+    // an element materialized mid-creation (to hold color runs) becomes the edit
+    // target so we UPDATE it instead of adding a duplicate.
+    const materializedId = this.newTextId;
+    this.newTextId = null;
+    this.editReq = null;
     // after finishing a text, drop back to the select tool (Excalidraw feel)
     const backToSelect = () => this.root.setTool("select");
 
@@ -1069,14 +1122,15 @@ export class InputController {
       backToSelect();
       return;
     }
-    if (req.id) {
-      const before = scene.get(req.id) as TextElement | undefined;
+    const editId = req.id ?? materializedId;
+    if (editId) {
+      const before = scene.get(editId) as TextElement | undefined;
       if (!before) {
         backToSelect();
         return;
       }
       if (text.trim() === "") {
-        const idx = scene.elements.findIndex((e) => e.id === req.id);
+        const idx = scene.elements.findIndex((e) => e.id === editId);
         this.root.history.execute(scene, deleteElement(clone(before), idx));
         backToSelect();
         return;
@@ -1237,10 +1291,12 @@ export class InputController {
    */
   private applyTextColorRange(color: string): boolean {
     const scene = this.root.scene;
-    const id = scene.editingId;
     const sel = this.root.editingTextSel;
     const live = this.root.getEditingTextValue?.();
-    if (!id || !sel || sel.start >= sel.end || live == null) return false;
+    if (!sel || sel.start >= sel.end || live == null) return false;
+    // existing element, or materialize a brand-new text so the run has a home
+    const id = scene.editingId ?? this.materializeEditingText(live);
+    if (!id) return false;
     const el = scene.get(id);
     if (!el || el.type !== "text" || el.mono) return false;
     const before = clone(el);
