@@ -50,11 +50,7 @@ export function draw(
 
   let drawn = 0;
   for (const el of sorted) {
-    if (el.id === scene.editingId) {
-      // A plain-text element stays visible while editing so multi-color updates
-      // live under a transparent overlay; other kinds hide under an opaque one.
-      if (el.type !== "text" || el.mono) continue;
-    }
+    if (el.id === scene.editingId) continue; // hidden while its text overlay is open
     if (!boxesIntersect(aabb(el), view)) continue; // culling
     // hide only the label while its label overlay is open (the element stays)
     if (el.id === scene.editingLabelId) {

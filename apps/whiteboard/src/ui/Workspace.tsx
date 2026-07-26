@@ -483,14 +483,6 @@ function TextOverlay({
 }) {
   const ref = useRef<HTMLTextAreaElement>(null);
   const done = useRef(false);
-  const [, force] = useState(0); // re-render on scene changes (live color preview)
-
-  // Re-render when the scene mutates (color applied / materialized) so the
-  // live-preview transparency below re-evaluates.
-  useEffect(() => {
-    if (!root) return;
-    return root.scene.changed.subscribe(() => force((n) => n + 1));
-  }, [root]);
 
   // For NEW text, style comes live from the panel (change font/mono while
   // creating). For editing an existing element, use its frozen values.
@@ -567,15 +559,6 @@ function TextOverlay({
   const displayColor = mono ? color : adaptColor(color);
   const labelBg = isLight ? "#fbfcf6" : "#0f120b";
 
-  // Live preview: when a real (non-mono) text element is being edited, the
-  // canvas draws it (colors and all) underneath, so the overlay text goes
-  // transparent (caret only) to avoid doubling and to show colors as you type.
-  const editEl =
-    req.targetKind !== "label" && root.scene.editingId
-      ? root.scene.get(root.scene.editingId)
-      : null;
-  const livePreview = !!editEl && editEl.type === "text" && !editEl.mono;
-
   // Escape, Ctrl/Cmd+Enter and clicking away COMMIT — using the live style for
   // new text. Guarded against the unmount-triggered blur committing twice.
   const commit = () => {
@@ -593,7 +576,6 @@ function TextOverlay({
       onInput={() => {
         autosize();
         pushSel();
-        root.setEditingText(ref.current?.value ?? "");
       }}
       onSelect={pushSel}
       onMouseUp={pushSel}
@@ -626,9 +608,7 @@ function TextOverlay({
         left: screen.x,
         top: screen.y,
         fontSize: fontSize * v.scale,
-        // transparent text (canvas draws it live) but keep a visible caret
-        color: livePreview ? "transparent" : displayColor,
-        caretColor: displayColor,
+        color: displayColor,
         fontFamily: mono ? "ui-monospace, monospace" : "Inter, sans-serif",
         padding: pad,
         background:

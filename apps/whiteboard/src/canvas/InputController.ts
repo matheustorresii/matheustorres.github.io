@@ -109,7 +109,6 @@ export class InputController {
   private editingText = false;
   private editReq: TextEditRequest | null = null; // params of the open text editor
   private newTextId: string | null = null; // element materialized mid-creation (for color runs)
-  private editBefore: Element | null = null; // snapshot at edit-start (history baseline)
   private clipboard: Element[] = []; // in-app copy/paste buffer
   // touch / multi-touch
   private pointers = new Map<number, Pt>(); // active pointers (screen coords)
@@ -1046,30 +1045,10 @@ export class InputController {
     this.editingText = true;
     this.editReq = req;
     this.newTextId = null;
-    // baseline for the single history entry produced on commit; live edits in
-    // between mutate the scene element directly (no per-keystroke history).
-    this.editBefore = id ? clone(this.root.scene.get(id)!) : null;
+    // hide the on-canvas copy while editing an existing element (no doubling)
     this.root.scene.editingId = id;
     if (id) this.root.scene.markDirty();
     this.root.onTextEdit?.(req);
-  }
-
-  /**
-   * Live-sync the editing text element's content as the user types, so the
-   * on-canvas copy (drawn under a transparent overlay) updates in real time,
-   * multi-color included. No history — commitText records the final state once.
-   */
-  setEditingText(value: string): void {
-    const id = this.root.scene.editingId;
-    if (!id) return;
-    const el = this.root.scene.get(id);
-    if (!el || el.type !== "text") return;
-    el.text = value;
-    const size = measureTextEl(this.measureCtx(), el as TextElement);
-    el.w = size.w;
-    el.h = size.h;
-    el.updatedAt = Date.now();
-    this.root.scene.markDirty();
   }
 
   /**
@@ -1110,11 +1089,9 @@ export class InputController {
     const size = measureTextEl(this.measureCtx(), el);
     el.w = size.w;
     el.h = size.h;
-    // add live (no history); commitText records the single add on close
-    scene.add(el);
+    this.root.history.execute(scene, addElement(el));
     this.newTextId = el.id;
-    scene.editingId = el.id;
-    scene.changed.notify(); // flip the overlay into live-preview mode
+    scene.editingId = el.id; // keep the on-canvas copy hidden under the textarea
     return el.id;
   }
 
@@ -1130,8 +1107,6 @@ export class InputController {
     const materializedId = this.newTextId;
     this.newTextId = null;
     this.editReq = null;
-    const editBefore = this.editBefore; // snapshot from edit-start (history baseline)
-    this.editBefore = null;
     // after finishing a text, drop back to the select tool (Excalidraw feel)
     const backToSelect = () => this.root.setTool("select");
 
@@ -1147,48 +1122,23 @@ export class InputController {
       backToSelect();
       return;
     }
-
-    // A text element materialized mid-creation is live in the scene but NOT in
-    // history yet. Close it out as a single add (or drop it if left empty).
-    if (materializedId) {
-      const live = scene.get(materializedId) as TextElement | undefined;
-      if (!live || text.trim() === "") {
-        if (live) scene.remove(materializedId); // no history — it never entered
-        backToSelect();
-        return;
-      }
-      const final: TextElement = {
-        ...clone(live),
-        text,
-        colorRuns: clampColorRuns(live.colorRuns, text.length),
-        updatedAt: Date.now(),
-      };
-      const size = measureTextEl(this.measureCtx(), final);
-      final.w = size.w;
-      final.h = size.h;
-      scene.remove(materializedId); // drop the live copy; re-add via history
-      this.root.history.execute(scene, addElement(final));
-      backToSelect();
-      return;
-    }
-
-    if (req.id) {
-      const live = scene.get(req.id) as TextElement | undefined;
-      const before = (editBefore ?? (live ? clone(live) : null)) as TextElement | null;
-      if (!live || !before) {
+    const editId = req.id ?? materializedId;
+    if (editId) {
+      const before = scene.get(editId) as TextElement | undefined;
+      if (!before) {
         backToSelect();
         return;
       }
       if (text.trim() === "") {
-        const idx = scene.elements.findIndex((e) => e.id === req.id);
+        const idx = scene.elements.findIndex((e) => e.id === editId);
         this.root.history.execute(scene, deleteElement(clone(before), idx));
         backToSelect();
         return;
       }
       const after: TextElement = {
-        ...clone(live),
+        ...clone(before),
         text,
-        colorRuns: clampColorRuns(live.colorRuns, text.length),
+        colorRuns: clampColorRuns(before.colorRuns, text.length),
         updatedAt: Date.now(),
       };
       const size = measureTextEl(this.measureCtx(), after);
@@ -1347,14 +1297,14 @@ export class InputController {
     // existing element, or materialize a brand-new text so the run has a home
     const id = scene.editingId ?? this.materializeEditingText(live);
     if (!id) return false;
-    const el = scene.get(id) as TextElement | undefined;
+    const el = scene.get(id);
     if (!el || el.type !== "text" || el.mono) return false;
-    // live mutation (no history) — commitText records the final state on close
-    el.text = live; // keep offsets aligned with what's on screen
-    el.colorRuns = mergeColorRun(el.colorRuns, sel.start, sel.end, color);
-    el.updatedAt = Date.now();
-    this.root.scene.markDirty();
-    this.root.scene.changed.notify(); // repaint + keep the overlay in sync
+    const before = clone(el);
+    const after = clone(el) as TextElement;
+    after.text = live; // sync so offsets line up with what's on screen
+    after.colorRuns = mergeColorRun(after.colorRuns, sel.start, sel.end, color);
+    after.updatedAt = Date.now();
+    this.root.history.execute(scene, updateElement(before, after));
     return true;
   }
 
@@ -1772,9 +1722,6 @@ export class InputController {
       targetKind: "label",
     };
     this.editingText = true;
-    this.editReq = req;
-    this.newTextId = null;
-    this.editBefore = null; // labels never live-preview or materialize
     this.root.scene.editingLabelId = id; // hide the on-canvas label meanwhile
     this.root.scene.markDirty();
     this.root.onTextEdit?.(req);
