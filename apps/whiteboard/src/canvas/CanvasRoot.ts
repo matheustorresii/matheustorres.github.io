@@ -192,6 +192,11 @@ export class CanvasRoot {
     this.input.commitText(req, text);
   }
 
+  /** Live-sync the text being edited so the on-canvas copy updates per keystroke. */
+  setEditingText(text: string): void {
+    this.input.setEditingText(text);
+  }
+
   /** Toggle the selected text element into/out of code-block (monospace) mode. */
   setTextMono(on: boolean): void {
     this.input.setSelectionMono(on);
