@@ -483,6 +483,7 @@ function TextOverlay({
 }) {
   const ref = useRef<HTMLTextAreaElement>(null);
   const done = useRef(false);
+  const commitRef = useRef<() => void>(() => {}); // latest commit fn for listeners
   const [, force] = useState(0); // re-render on scene changes (live color preview)
 
   // Re-render when the scene mutates (color applied / materialized) so the
@@ -491,6 +492,19 @@ function TextOverlay({
     if (!root) return;
     return root.scene.changed.subscribe(() => force((n) => n + 1));
   }, [root]);
+
+  // Click anywhere outside the editor (except the style panel, which tweaks THIS
+  // text) commits and exits — so leaving text-edit mode is reliable.
+  useEffect(() => {
+    const onDown = (e: PointerEvent) => {
+      const t = e.target as HTMLElement | null;
+      if (!t || t === ref.current) return; // clicking the editor keeps editing
+      if (t.closest(".style-panel")) return; // adjusting style keeps editing
+      commitRef.current();
+    };
+    window.addEventListener("pointerdown", onDown, true);
+    return () => window.removeEventListener("pointerdown", onDown, true);
+  }, []);
 
   // For NEW text, style comes live from the panel (change font/mono while
   // creating). For editing an existing element, use its frozen values.
@@ -584,6 +598,12 @@ function TextOverlay({
     root.commitText({ ...req, fontSize, color, mono }, ref.current?.value ?? req.initial);
     onDone();
   };
+  commitRef.current = commit;
+
+  // Live preview draws the glyphs on the canvas with textBaseline "top", but a
+  // textarea's line box centers the glyph (half-leading = (lineHeight-1)/2). Lift
+  // the transparent overlay by that amount so the caret lands on the canvas text.
+  const halfLeading = livePreview ? 0.1 * fontSize * v.scale : 0;
 
   return (
     <textarea
@@ -624,7 +644,7 @@ function TextOverlay({
       }}
       style={{
         left: screen.x,
-        top: screen.y,
+        top: screen.y - halfLeading,
         fontSize: fontSize * v.scale,
         // transparent text (canvas draws it live) but keep a visible caret
         color: livePreview ? "transparent" : displayColor,
